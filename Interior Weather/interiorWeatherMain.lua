@@ -67,20 +67,20 @@ local soundData = {
             pitch = 1.0
         },
         [5] = {
-            volume = 0.65,
+            volume = 0.8,
             pitch = 1.0
         },
         [6] = {
-            volume = 0.35,
-            pitch = 0.6
+            volume = 0.45,
+            pitch = 0.7
         },
         [7] = {
-            volume = 0.35,
-            pitch = 0.6
+            volume = 0.45,
+            pitch = 0.7
         },
         [9] = {
-            volume = 0.35,
-            pitch = 0.6
+            volume = 0.45,
+            pitch = 0.7
         }
     }
 }
