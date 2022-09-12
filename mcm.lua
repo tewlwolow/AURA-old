@@ -352,6 +352,10 @@ pageMisc:createYesNoButton {
 	variable = registerVariable("rainSounds"),
 }
 pageMisc:createYesNoButton {
+	label = string.format("%s %s", messages.ashfallTentSounds, messages.Ashfall),
+	variable = registerVariable("ashfallTentSounds"),
+}
+pageMisc:createYesNoButton {
 	label = string.format("%s %s", messages.windSounds, messages.WtS),
 	variable = registerVariable("windSounds"),
 }

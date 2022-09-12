@@ -76,7 +76,14 @@ this.interiorWeather = {
 		[6] = nil,
 		[7] = nil,
 		[9] = nil
-	}
+	},
+	["ate"] = {
+		[4] = nil,
+		[5] = nil,
+		[6] = nil,
+		[7] = nil,
+		[9] = nil
+	},
 }
 
 
@@ -100,6 +107,10 @@ local modules = {
 	["wind"] = {
 		old = nil,
 		new = nil
+	},
+	["ashfallTent"] = {
+		old = nil,
+		new = nil
 	}
 }
 
@@ -120,7 +131,7 @@ local function isBlocked(track)
 end
 
 -- Controls fading in --
-local function fadeIn(ref, volume, track, module)
+local function fadeIn(ref, volume, track, module, fadeStep)
 
 	-- We can sometimes get calls where no sound is actually playing, get out if it is so --
 	if not track or not tes3.getSoundPlaying { sound = track, reference = ref } then debugLog("No track to fade in. Returning.") return end
@@ -129,7 +140,7 @@ local function fadeIn(ref, volume, track, module)
 	if isBlocked(track) then
 		timer.start {
 			callback = function()
-				fadeIn(ref, volume, track, module)
+				fadeIn(ref, volume, track, module, fadeStep)
 			end,
 			type = timer.real,
 			iterations = 1,
@@ -142,13 +153,13 @@ local function fadeIn(ref, volume, track, module)
 	table.insert(blocked, track)
 
 	-- Magic maths --
-	local TIME = TICK * volume / STEP
-	local ITERS = math.ceil(volume / STEP)
+	local TIME = TICK * volume / fadeStep
+	local ITERS = math.ceil(volume / fadeStep)
 	local runs = 1
 
 	-- Inline function to ensure we can register different iterations of this on different sounds --
 	local function fader()
-		local incremented = STEP * runs
+		local incremented = fadeStep * runs
 
 		if not tes3.getSoundPlaying { sound = track, reference = ref } then
 			debugLog("In not playing: " .. track.id)
@@ -187,14 +198,14 @@ local function fadeIn(ref, volume, track, module)
 end
 
 -- Same as above, just backwards --
-local function fadeOut(ref, volume, track, module)
+local function fadeOut(ref, volume, track, module, fadeStep)
 
 	if not track or not tes3.getSoundPlaying { sound = track, reference = ref } then debugLog("No track to fade out. Returning.") return end
 
 	if isBlocked(track) then
 		timer.start {
 			callback = function()
-				fadeOut(ref, volume, track, module)
+				fadeOut(ref, volume, track, module, fadeStep)
 			end,
 			type = timer.real,
 			iterations = 1,
@@ -206,12 +217,12 @@ local function fadeOut(ref, volume, track, module)
 	debugLog("Running fade out for: " .. track.id)
 	table.insert(blocked, track)
 
-	local TIME = TICK * volume / STEP
-	local ITERS = math.ceil(volume / STEP)
+	local TIME = TICK * volume / fadeStep
+	local ITERS = math.ceil(volume / fadeStep)
 	local runs = ITERS
 
 	local function fader()
-		local incremented = STEP * runs
+		local incremented = fadeStep * runs
 		if not tes3.getSoundPlaying { sound = track, reference = ref } then
 			debugLog("Out not playing: " .. track.id)
 			return
@@ -247,11 +258,11 @@ local function fadeOut(ref, volume, track, module)
 end
 
 -- Simple crossfade using available faders --
-local function crossFade(ref, volume, trackOld, trackNew, module)
+local function crossFade(ref, volume, trackOld, trackNew, module, fadeStep)
 	if not trackOld or not trackNew then return end
 	debugLog("Running crossfade for: " .. trackOld.id .. ", " .. trackNew.id)
-	fadeOut(ref, volume, trackOld, module)
-	fadeIn(ref, volume, trackNew, module)
+	fadeOut(ref, volume, trackOld, module, fadeStep)
+	fadeIn(ref, volume, trackNew, module, fadeStep)
 end
 
 -- Sometimes we need to just remove the sounds without fading --
@@ -289,19 +300,23 @@ function this.remove(options)
 	debugLog("Removing sounds for module: " .. options.module)
 	local ref = options.reference or tes3.mobilePlayer.reference
 	local volume = options.volume or MAX
+	local fadeStep = options.fadeStep or STEP
 
 	if modules[options.module].old
 		and tes3.getSoundPlaying { sound = modules[options.module].old, reference = ref }
 	then
-		fadeOut(ref, volume, modules[options.module].old, options.module)
+		fadeOut(ref, volume, modules[options.module].old, options.module, fadeStep)
 	else
 		debugLog("Old track not playing.")
 	end
 
+	-- Workaround to prevent repeating fadeOut for ashfallTent module
+	if options.clearNewTrack then modules[options.module].new = nil end
+
 	if modules[options.module].new
 		and tes3.getSoundPlaying { sound = modules[options.module].new, reference = ref }
 	then
-		fadeOut(ref, volume, modules[options.module].new, options.module)
+		fadeOut(ref, volume, modules[options.module].new, options.module, fadeStep)
 	else
 		debugLog("New track not playing.")
 	end
@@ -368,6 +383,17 @@ local function getTrack(options)
 			debugLog("Got cold type.")
 			table = this.cold
 		end
+	elseif options.module == "ashfallTent" then
+		debugLog("Got ashfall tent sounds module.")
+		debugLog("Got interior type: "..options.type)
+		local ateTrack = this.interiorWeather[options.type][options.weather]
+		if ateTrack then
+			debugLog("Got track: " .. ateTrack.id)
+			return ateTrack
+		else
+			debugLog("No track found.")
+			return
+		end
 	end
 
 	-- Can happen on fresh load etc. --
@@ -432,6 +458,7 @@ function this.play(options)
 
 	-- Need this for fader calcs --
 	local volume = options.volume or MAX
+	local fadeStep = options.fadeStep or STEP
 
 	if options.last and modules[options.module].new then
 		if tes3.getSoundPlaying { sound = modules[options.module].new, reference = ref } then tes3.removeSound { sound = modules[options.module].new, reference = ref } end
@@ -467,10 +494,11 @@ function this.play(options)
 		-- Crossfade if old track is playing and is different from new sound, otherwise fade in --
 		if modules[options.module].old and
 			tes3.getSoundPlaying { sound = modules[options.module].old, reference = ref } and
-			(modules[options.module].old ~= newTrack) then
-			crossFade(ref, volume, modules[options.module].old, newTrack, options.module)
+			(modules[options.module].old ~= newTrack) and
+			(not options.skipCrossfade) then
+			crossFade(ref, volume, modules[options.module].old, newTrack, options.module, fadeStep)
 		else
-			fadeIn(ref, volume, newTrack, options.module)
+			fadeIn(ref, volume, newTrack, options.module, fadeStep)
 		end
 	end
 end

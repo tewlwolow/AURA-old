@@ -31,6 +31,7 @@ this.messages = {
 	mainLabel = "par tewlwolow.\nAmélioration audio utilisant MWSE.",
 
 	WtS = "Nécessite Watch the Skies.",
+	Ashfall = "Nécessite Ashfall",
 
 	settings = "Paramètres",
 	default = "Par défaut",
@@ -117,6 +118,7 @@ this.messages = {
 	miscDesc = "Joue des sons additionnels divers.",
 	rainSounds = "Activer les sons variables de la pluie en fonction du nombre de particules ?",
 	windSounds = "Activer les sons variables du vent en fonction de la vitesse des nuages ?",
+	ashfallTentSounds = "Activer les sons de la pluie en intérieur à l'abri dans des tentes mobiles ?",
 	playInteriorWind = "Activer les sons de vent en intérieur ? Cela signifie que la dernière boucle extérieure en date sera jouée au niveau de chaque porte ou fenêtre menant à l'extérieur.",
 	windVol = "Change le % volume for wind sounds.",
 	playSplash = "Activer les sons d'éclaboussures en entrant et sortant de l'eau ?",

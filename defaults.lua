@@ -47,6 +47,7 @@ return {
     interiorMusic = false,
     windSounds = true,
     rainSounds = true,
+    ashfallTentSounds = true,
     disabledTaverns = {},
     windVol = 110,
     playInteriorWind = true,

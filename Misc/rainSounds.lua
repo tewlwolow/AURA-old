@@ -38,6 +38,11 @@ local interiorRainLoops = {
         ["light"] = "tew_t_rainlight",
         ["medium"] = "tew_t_rainmedium",
         ["heavy"] = "tew_t_rainheavy",
+    },
+    ["ate"] = {
+        ["light"] = "tew_at_rainmedium",
+        ["medium"] = "tew_at_rainmedium",
+        ["heavy"] = "tew_at_rainheavy",
     }
 }
 

@@ -18,6 +18,7 @@ this.messages = {
 	mainLabel = "by tewlwolow.\nLua-based sound overhaul.",
 
 	WtS = "Requires Watch the Skies.",
+	Ashfall = "Requires Ashfall.",
 
 	settings = "Settings",
 	default = "Default",
@@ -104,6 +105,7 @@ this.messages = {
 	miscDesc = "Plays various miscellaneous sounds.",
 	rainSounds = "Enable variable rain sounds per max particles?",
 	windSounds = "Enable variable wind sounds per clouds speed?",
+	ashfallTentSounds = "Enable interior rain sounds while sheltered inside mobile tents?",
 	playInteriorWind = "Enable wind sounds in interiors? This means the last exterior loop will play on each door and window leading to an exterior.",
 	windVol = "Changes % volume for wind sounds.",
 	playSplash = "Enable splash sounds when going underwater and back to surface?",
