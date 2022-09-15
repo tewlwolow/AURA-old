@@ -180,6 +180,10 @@ local function buildWeatherSounds()
 	objectId = "tew_t_rainheavy"
 	createSound(objectId, filename)
 
+	filename = soundDir .. wDir .. "\\ten\\rl.wav"
+    objectId = "tew_at_rainlight"
+    createSound(objectId, filename)
+
 	filename = soundDir .. wDir .. "\\ten\\rm.wav"
     objectId = "tew_at_rainmedium"
     createSound(objectId, filename)

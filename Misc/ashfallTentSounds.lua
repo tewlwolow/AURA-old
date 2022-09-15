@@ -11,41 +11,14 @@ local currentWeather
 local nextWeather
 local trackLoaded = false
 local timerInProgress = false
-local rainAboutToStop = false
-local rainAboutToStart = false
-local transitionDelay = 0
 
 local TICK = 0.1
 
 local tracks = {
-    [4] = "tew_at_rainmedium",
-    [5] = "tew_at_rainheavy",
+    "tew_at_rainlight",
+    "tew_at_rainmedium",
+    "tew_at_rainheavy",
 }
-
-local function updateWeather()
-    if WtC.nextWeather then
-        nextWeather = WtC.nextWeather.index
-    else
-        nextWeather = nil
-    end
-    currentWeather = WtC.currentWeather.index
-end
-
-local function isTrackPlaying()
-    if not trackLoaded then return false end
-    updateWeather()
-    local playingNow = {
-        tracks[currentWeather],
-        tracks[nextWeather],
-    }
-    for _, v in pairs(playingNow) do
-        if tes3.getSoundPlaying{sound = v, reference = tes3.mobilePlayer.reference} then
-            return true
-        end
-    end
-    trackLoaded = false
-    return false
-end
 
 local function isBadWeather(weatherIndex)
     if (weatherIndex == 4) or (weatherIndex == 5) then
@@ -54,12 +27,33 @@ local function isBadWeather(weatherIndex)
     return false
 end
 
-local function isRaining()
-    if rainAboutToStop then return false end
-    if rainAboutToStart then return true end
+local function updateWeather()
+    currentWeather = WtC.currentWeather.index
+    if WtC.nextWeather then
+        nextWeather = WtC.nextWeather.index
+    else
+        nextWeather = nil
+    end
+end
 
-    updateWeather()
-    return isBadWeather(currentWeather)
+local function isTrackPlaying()
+    if not trackLoaded then return false end
+    for _, v in pairs(tracks) do
+        if tes3.getSoundPlaying{sound = v, reference = tes3.mobilePlayer.reference} then
+            return true
+        end
+    end
+    trackLoaded = false
+    return false
+end
+
+local function isRainLoopSoundPlaying()
+    if WtC.currentWeather.rainLoopSound and
+        WtC.currentWeather.rainLoopSound:isPlaying() then
+        return true
+    else
+        return false
+    end
 end
 
 local function stopTentSound()
@@ -78,10 +72,9 @@ local function stopTentSound()
         timerInProgress = true
         timer.start{
             iterations = 1,
-            duration = TIME + delay + transitionDelay,
+            duration = TIME + delay,
             callback = function()
                 timerInProgress = false
-                if transitionDelay > 0 then transitionDelay = 0 end
             end
         }
     end
@@ -89,21 +82,23 @@ end
 
 local function playTentSound()
     if timerInProgress then return end
-    if rainAboutToStop then return end
+
+    updateWeather()
+    local weather = currentWeather
+    if nextWeather then
+        if isBadWeather(currentWeather) and (not isBadWeather(nextWeather)) then
+            return
+        elseif isBadWeather(nextWeather) then
+            weather = nextWeather
+        end
+    end
+
     local fadeStep = 0.13
     local delay = 0.1
     local volume = 1
     local TIME = TICK*volume/fadeStep
-    local weather
-
-    if isBadWeather(nextWeather) then
-        weather = nextWeather
-    else
-        weather = currentWeather
-    end
 
     if (not isTrackPlaying()) then
-        debugLog("About to play track: " .. tostring(tracks[weather]))
         sounds.play{
             module = moduleName,
             volume = volume,
@@ -127,7 +122,7 @@ end
 
 local function onSimulate(e)
     if ashfall.data.insideTent then
-        if isRaining() then
+        if isRainLoopSoundPlaying() then
             playTentSound()
         else
             stopTentSound()
@@ -135,72 +130,6 @@ local function onSimulate(e)
     else
         stopTentSound()
     end
-end
-
-local function getTransToRainyDelay(toWeatherIndex)
-
-    -- Rough estimations of the time it takes to transition to rainy weather.
-    -- From NON-rainy to rainy as well as from rainy to rainy weather.
-    -- Starting point is when weatherTransitionStarted triggers.
-    -- Ending point is somewhere before weatherTransitionFinished
-    -- because rainLoopSound actually kicks in before the weather fully
-    -- transitions.
-
-    -- And because immersion.
-
-    -- These values are based on personal measurements
-    -- (and preferences).
-    -- Tested with vanilla morrowind.ini
-    -- May be inconsistent across various setups.
-    -- Feel free to tinker with.
-
-    updateWeather()
-
-    if (not isBadWeather(currentWeather)) then
-        if toWeatherIndex == 4 then return 45 end
-        if toWeatherIndex == 5 then return 30 end
-    else
-        if toWeatherIndex == 4 then return 40 end
-        if toWeatherIndex == 5 then return 25 end
-    end
-
-    return 0
-end
-
-local function onTransitionStarted(e)
-    debugLog("Weather transition started...")
-    transitionDelay = 0
-    if (not isRaining()) and
-        ((e.to.name == "Rain") or (e.to.name == "Thunderstorm")) then
-            debugLog("...non-rainy -> rainy")
-            rainAboutToStart = true
-            timerInProgress = true
-            timer.start{
-                iterations = 1,
-                duration = getTransToRainyDelay(e.to.index),
-                callback = function()
-                    timerInProgress = false
-                end
-            }
-    elseif isRaining() and
-            ((e.to.name ~= "Rain") and (e.to.name ~= "Thunderstorm")) then
-                debugLog("...rainy -> non-rainy")
-                rainAboutToStop = true
-                stopTentSound()
-    elseif isRaining() and
-            ((e.to.name == "Rain") or (e.to.name == "Thunderstorm")) then
-                debugLog("...rainy -> rainy")
-                rainAboutToStop = false
-                transitionDelay = getTransToRainyDelay(e.to.index)
-                stopTentSound()
-    end
-end
-
-local function onTransitionFinished()
-    debugLog("Weather transition finished.")
-    rainAboutToStop = false
-    rainAboutToStart = false
-    transitionDelay = 0
 end
 
 local function onCOC()
@@ -220,9 +149,5 @@ end
 if ashfall and config.ashfallTentSounds then
     WtC = tes3.worldController.weatherController
     event.register("simulate", onSimulate, {priority=-234})
-    event.register("weatherTransitionStarted", onTransitionStarted, {priority=-233})
-    event.register("weatherTransitionFinished", onTransitionFinished, {priority=-233})
-    event.register("weatherTransitionImmediate", onTransitionFinished, {priority=-233})
-    event.register("weatherChangedImmediate", onTransitionFinished, {priority=-233})
-    event.register("cellChanged", onCOC, {priority=-170})
+    event.register("cellChanged", onCOC, {priority=-160})
 end
