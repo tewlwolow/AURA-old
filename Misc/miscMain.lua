@@ -29,6 +29,8 @@ local function init()
         mwse.log(string.format("[AURA %s] %s windSounds.lua.", version, messages.loadingFile))
         dofile("Data Files\\MWSE\\mods\\tew\\AURA\\Misc\\windSounds.lua")
     end
+
+    dofile("Data Files\\MWSE\\mods\\tew\\AURA\\Misc\\rainOnStatics.lua")
 end
 
 init()
