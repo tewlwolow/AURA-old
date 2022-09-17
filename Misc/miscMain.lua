@@ -9,7 +9,7 @@ local function init()
     local playYurtFlap = config.playYurtFlap
     local rainSounds = config.rainSounds
     local windSounds = config.windSounds
-    local ashfallTentSounds = config.ashfallTentSounds
+    local shelterSounds = config.shelterSounds
 
     if playSplash and not moduleAmbientOutdoor then
         mwse.log(string.format("[AURA %s] %s waterSplash.lua.", version, messages.loadingFile))
@@ -31,9 +31,9 @@ local function init()
         dofile("Data Files\\MWSE\\mods\\tew\\AURA\\Misc\\windSounds.lua")
     end
 
-    if ashfallTentSounds then
-        mwse.log(string.format("[AURA %s] %s ashfallTentSounds.lua.", version, messages.loadingFile))
-        dofile("Data Files\\MWSE\\mods\\tew\\AURA\\Misc\\ashfallTentSounds.lua")
+    if shelterSounds then
+        mwse.log(string.format("[AURA %s] %s shelterSounds.lua.", version, messages.loadingFile))
+        dofile("Data Files\\MWSE\\mods\\tew\\AURA\\Misc\\shelterSounds.lua")
     end
 end
 

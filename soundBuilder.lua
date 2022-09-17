@@ -181,15 +181,15 @@ local function buildWeatherSounds()
 	createSound(objectId, filename)
 
 	filename = soundDir .. wDir .. "\\ten\\rl.wav"
-    objectId = "tew_at_rainlight"
+    objectId = "tew_sh_rainlight"
     createSound(objectId, filename)
 
 	filename = soundDir .. wDir .. "\\ten\\rm.wav"
-    objectId = "tew_at_rainmedium"
+    objectId = "tew_sh_rainmedium"
     createSound(objectId, filename)
 
 	filename = soundDir .. wDir .. "\\ten\\rh.wav"
-    objectId = "tew_at_rainheavy"
+    objectId = "tew_sh_rainheavy"
     createSound(objectId, filename)
 
 	filename, objectId = nil, nil

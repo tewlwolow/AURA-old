@@ -77,7 +77,7 @@ this.interiorWeather = {
 		[7] = nil,
 		[9] = nil
 	},
-	["ate"] = {
+	["she"] = {
 		[4] = nil,
 		[5] = nil,
 		[6] = nil,
@@ -108,7 +108,7 @@ local modules = {
 		old = nil,
 		new = nil
 	},
-	["ashfallTent"] = {
+	["shelter"] = {
 		old = nil,
 		new = nil
 	}
@@ -310,7 +310,7 @@ function this.remove(options)
 		debugLog("Old track not playing.")
 	end
 
-	-- Workaround to prevent repeating fadeOut for ashfallTent module
+	-- Workaround to prevent repeating fadeOut for shelter module
 	if options.clearNewTrack then modules[options.module].new = nil end
 
 	if modules[options.module].new
@@ -383,13 +383,13 @@ local function getTrack(options)
 			debugLog("Got cold type.")
 			table = this.cold
 		end
-	elseif options.module == "ashfallTent" then
-		debugLog("Got ashfall tent sounds module.")
+	elseif options.module == "shelter" then
+		debugLog("Got shelter module.")
 		debugLog("Got interior type: "..options.type)
-		local ateTrack = this.interiorWeather[options.type][options.weather]
-		if ateTrack then
-			debugLog("Got track: " .. ateTrack.id)
-			return ateTrack
+		local shelterTrack = this.interiorWeather[options.type][options.weather]
+		if shelterTrack then
+			debugLog("Got track: " .. shelterTrack.id)
+			return shelterTrack
 		else
 			debugLog("No track found.")
 			return
