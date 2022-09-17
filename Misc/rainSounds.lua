@@ -1,5 +1,3 @@
-local modversion = require("tew.AURA.version")
-local version = modversion.version
 local config = require("tew.AURA.config")
 local sounds = require("tew.AURA.sounds")
 local common = require("tew.AURA.common")
