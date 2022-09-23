@@ -51,18 +51,8 @@ local function removeSoundFromRef(ref)
 	end
 end
 
-local function getSound()
-	local weather
-	if WtC.nextWeather then
-		weather = WtC.nextWeather
-	else
-		weather = WtC.currentWeather
-	end
-	return sounds.interiorWeather["ten"][weather.index]
-end
-
 local function addSound(ref)
-	local sound = getSound()
+	local sound = sounds.interiorWeather["ten"][WtC.currentWeather.index]
 	if not sound then return end
 	local playerPos = tes3.player.position:copy()
 	local objId = ref.object.id:lower()
@@ -152,3 +142,6 @@ WtC = tes3.worldController.weatherController
 event.register("load", clearCache, { priority = -270 })
 event.register("loaded", runTimer, { priority = -300 })
 event.register("cellChanged", onCOC, { priority = -280 })
+event.register("weatherTransitionFinished", clearCache, { priority = -250 })
+event.register("weatherChangedImmediate", clearCache, { priority = -250 })
+event.register("weatherTransitionImmediate", clearCache, { priority = -250 })
