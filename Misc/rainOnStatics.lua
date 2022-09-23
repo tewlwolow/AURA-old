@@ -5,21 +5,20 @@ local debugLog = common.debugLog
 local WtC
 local staticsCache = {}
 
--- Map between weather types, rain types and sound id --
-local rainLoops = {
-    ["Rain"] = sounds.interiorWeather["ten"][4],
-    ["Thunderstorm"] = sounds.interiorWeather["ten"][5]
-}
-
 local rainyStatics = {
 	"tent",
-	"skin", -- skin matches guarskin as well
+	"skin", -- skin matches guarskin, bearskin
 	"fabric",
 	"awning",
 	"overhang",
-	"hilltent",
 	"banner",
 	"marketstand", -- relevant Tamriel_Data and OAAB_Data assets
+}
+
+local blockedStatics = {
+	"bannerpost",
+	"bannerhanger", -- Tamriel_Data
+	"ex_ashl_banner", -- vanilla bannerpost
 }
 
 local tracks = {
@@ -43,7 +42,7 @@ local function removeSoundFromRef(ref)
 			sound = v,
 			reference = ref
 		} then
-			debugLog("Static " .. tostring(ref) .. " is playing " .. v .. ", now removing it.")
+			debugLog("Track " .. v .. " playing on ref " .. tostring(ref) .. ", now removing it.")
 			tes3.removeSound{
 				sound = v,
 				reference = ref
@@ -59,8 +58,7 @@ local function getSound()
 	else
 		weather = WtC.currentWeather
 	end
-	local weatherName = weather.name
-	return rainLoops[weatherName]
+	return sounds.interiorWeather["ten"][weather.index]
 end
 
 local function addSound(ref)
@@ -80,8 +78,8 @@ local function clearCache()
 	debugLog("Clearing staticsCache.")
 	for _, ref in ipairs(staticsCache) do
 		removeSoundFromRef(ref)
+		staticsCache[_] = nil
 	end
-	staticsCache = {}
 end
 
 local function populateCache()
@@ -91,15 +89,21 @@ local function populateCache()
 		-- Some statics might actually be activators, search for both object types
 		if (ref.object.objectType == tes3.objectType.static)
 			or (ref.object.objectType == tes3.objectType.activator) then
+			for _, pattern in pairs(blockedStatics) do
+				if string.find(ref.object.id:lower(), pattern) then
+					debugLog("Skipping blocked static: " .. tostring(ref))
+					goto continue
+				end
+			end
 			for _, pattern in pairs(rainyStatics) do
-				local i, j = string.find(ref.object.id:lower(), pattern)
-				if i and j then
+				if string.find(ref.object.id:lower(), pattern) then
 					debugLog("Adding static " .. tostring(ref) .. " to cache. Not yet playing.")
 					table.insert(staticsCache, #staticsCache+1, ref)
 					break
 				end
 			end
 		end
+		:: continue ::
 	end
 	debugLog("staticsCache now holds " .. #staticsCache .. " statics.")
 end
