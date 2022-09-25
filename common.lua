@@ -110,4 +110,72 @@ function this.getWindoors(cell)
 	end
 end
 
+function this.cellIsInterior()
+    local cell = tes3.getPlayerCell()
+    if cell and
+        cell.isInterior and
+        (not cell.behavesAsExterior) then
+        return true
+    else
+        return false
+    end
+end
+
+function this.isPlayerShelteredByRef(targetRef)
+
+	-- Checks if player is sheltered inside
+	-- or underneath the given ref.
+    -- Returns true if rayTest result matches
+    -- targetRef arg, or false otherwise.
+
+    if this.cellIsInterior() then
+        return false
+    end
+
+    local sheltered = false
+    local match = false
+    local reference = tes3.player
+
+	this.debugLog("RayTesting if sheltered by static: " .. tostring(targetRef))
+
+    local height = reference.object.boundingBox
+        and reference.object.boundingBox.max.z or 0
+
+    local results = tes3.rayTest{
+        position = {
+            reference.position.x,
+            reference.position.y,
+            reference.position.z + (height/2)
+        },
+        direction = {0, 0, 1},
+        findAll = true,
+        maxDistance = 5000,
+        ignore = {reference},
+        useBackTriangles = true,
+    }
+    if results then
+        for _, result in ipairs(results) do
+            match = false
+            if result and result.reference and result.reference.object then
+                sheltered =
+                    ( result.reference.object.objectType == tes3.objectType.static or
+                    result.reference.object.objectType == tes3.objectType.activator ) == true
+				if result.reference.object.id:lower() == targetRef.object.id:lower() then
+					match = true
+				end
+                if sheltered == true then
+                    break
+                end
+            end
+        end
+    end
+	if (sheltered and match) then
+		this.debugLog("RayTest matched for " .. tostring(targetRef))
+		return true
+	else
+		this.debugLog("RayTest did not match for " .. tostring(targetRef))
+		return false
+	end
+end
+
 return this
