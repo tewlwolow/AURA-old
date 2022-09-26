@@ -8,6 +8,9 @@ local playerRef
 local staticsCache = {}
 
 local currentShelter
+local lastCell
+local lastCellStaticsAmount
+
 local TICK = 0.1
 
 local rainyStatics = {
@@ -178,8 +181,14 @@ local function clearCache()
 end
 
 local function populateCache()
-	debugLog("Commencing dump!")
 	local cell = tes3.getPlayerCell()
+	if (cell == lastCell) and (lastCellStaticsAmount == 0) then
+		-- No need to keep iterating over cell references
+		-- if we know that there are none in it that could
+		-- be added to our staticsCache.
+		return
+	end
+	debugLog("Commencing dump!")
 	for ref in cell:iterateReferences() do
 		-- We are interested in both statics and activators
 		if (ref.object.objectType == tes3.objectType.static)
@@ -196,6 +205,8 @@ local function populateCache()
 		:: continue ::
 	end
 	debugLog("staticsCache now holds " .. #staticsCache .. " statics.")
+	lastCell = cell
+	lastCellStaticsAmount = #staticsCache
 end
 
 local function tick()
