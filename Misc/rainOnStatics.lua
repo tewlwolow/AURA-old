@@ -5,6 +5,9 @@ local debugLog = common.debugLog
 local WtC
 local staticsCache = {}
 
+local lastCell
+local lastCellStaticsAmount
+
 local rainyStatics = {
 	"tent",
 	"skin", -- skin matches guarskin, bearskin
@@ -73,10 +76,16 @@ local function clearCache()
 end
 
 local function populateCache()
-	debugLog("Commencing dump!")
 	local cell = tes3.getPlayerCell()
+	if (cell == lastCell) and (lastCellStaticsAmount == 0) then
+		-- No need to keep iterating over cell references
+		-- if we know that there are none in it that could
+		-- be added to our staticsCache.
+		return
+	end
+	debugLog("Commencing dump!")
 	for ref in cell:iterateReferences() do
-		-- Some statics might actually be activators, search for both object types
+		-- We are interested in both statics and activators
 		if (ref.object.objectType == tes3.objectType.static)
 			or (ref.object.objectType == tes3.objectType.activator) then
 			for _, pattern in pairs(blockedStatics) do
@@ -96,6 +105,8 @@ local function populateCache()
 		:: continue ::
 	end
 	debugLog("staticsCache now holds " .. #staticsCache .. " statics.")
+	lastCell = cell
+	lastCellStaticsAmount = #staticsCache
 end
 
 local function tick()
