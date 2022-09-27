@@ -2,6 +2,7 @@ local sounds = require("tew.AURA.sounds")
 local common = require("tew.AURA.common")
 local debugLog = common.debugLog
 local fader = require("tew.AURA.fader")
+local rainyStaticVol = 0.8
 
 local WtC
 local playerRef
@@ -112,6 +113,7 @@ local function addSound(ref)
 		if tes3.getSoundPlaying{sound = sound, reference = ref} then
 			debugLog("[sheltered] Sound playing on shelter ref. Running crossFade.")
 			fader.crossFade{
+				volume = rainyStaticVol,
 				trackOld = sound,
 				trackNew = sound,
 				refOld = ref,
@@ -134,6 +136,7 @@ local function addSound(ref)
 		if tes3.getSoundPlaying{sound = sound, reference = playerRef} then
 			debugLog("[not sheltered] Sound playing on playerRef. Running crossFade.")
 			fader.crossFade{
+				volume = rainyStaticVol,
 				trackOld = sound,
 				trackNew = sound,
 				refOld = playerRef,
@@ -152,7 +155,7 @@ local function addSound(ref)
 		and (not tes3.getSoundPlaying{sound = sound, reference = ref})
 		and (playerPos:distance(refPos) < 800) then
 		debugLog("Adding sound " .. sound.id .. " for ---> " .. objId)
-		tes3.playSound{ sound = sound, reference = ref, loop = true }
+		tes3.playSound{ sound = sound, reference = ref, loop = true, volume = rainyStaticVol }
 	end
 end
 
@@ -169,6 +172,7 @@ local function clearCache()
 		if playerRefSound then
 			debugLog(tostring(playerRefSound) .. " playing on playerRef. Running fadeOut.")
 			fader.fadeOut({
+				volume = rainyStaticVol,
 				reference = playerRef,
 				track = playerRefSound,
 				fadeStep = 0.050,

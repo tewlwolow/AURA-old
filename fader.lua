@@ -47,7 +47,7 @@ local function parse(options)
         playWithZeroVolume(track, ref)
         currentVolume = MIN
     else
-        currentVolume = MAX
+        currentVolume = volume
     end
 
     if (not tes3.getSoundPlaying{sound = track, reference = ref}) then
@@ -60,11 +60,11 @@ local function parse(options)
     local function fader()
         if fadeType == "in" then
             currentVolume = currentVolume + fadeStep
+            if currentVolume > volume then currentVolume = volume end
         else
             currentVolume = currentVolume - fadeStep
+            if currentVolume < 0 then currentVolume = 0 end
         end
-        if currentVolume < 0 then currentVolume = 0 end
-        if currentVolume > 1 then currentVolume = 1 end
     
         tes3.adjustSoundVolume{sound = track, volume = currentVolume, reference = ref}
 
@@ -136,11 +136,13 @@ function this.crossFade(options)
         track = trackOld,
         reference = refOld,
         fadeStep = fadeOutStep,
+        volume = volume,
     })
     this.fadeIn({
         track = trackNew,
         reference = refNew,
         fadeStep = fadeInStep,
+        volume = volume,
     })
     crossFadeTimer = timer.start{
         iterations = 1,
