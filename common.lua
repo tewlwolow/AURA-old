@@ -110,8 +110,28 @@ function this.getWindoors(cell)
 	end
 end
 
-function this.cellIsInterior()
-    local cell = tes3.getPlayerCell()
+-- Pass me a table and an element and I'll tell you the index it's stored at --
+function getIndex(tab, elem)
+	local index = nil
+	for i, v in ipairs(tab) do
+		if (v == elem) then
+			index = i
+		end
+	end
+	return index
+end
+
+function this.findMatch(stringArray, str)
+	for _, pattern in pairs(stringArray) do
+		if string.find(str, pattern) then
+			return true
+		end
+	end
+	return false
+end
+
+function this.cellIsInterior(cell)
+    local cell = cell or tes3.getPlayerCell()
     if cell and
         cell.isInterior and
         (not cell.behavesAsExterior) then
@@ -121,61 +141,88 @@ function this.cellIsInterior()
     end
 end
 
-function this.isPlayerShelteredByRef(targetRef)
+-- If given a target ref, returns true if origin ref is sheltered by
+-- target ref, or false otherwise. If not given a target ref, returns
+-- whether origin ref is sheltered at all.
+function this.isRefSheltered(options)
 
-	-- Checks if player is sheltered inside
-	-- or underneath the given ref.
-    -- Returns true if rayTest result matches
-    -- targetRef arg, or false otherwise.
+    local originRef = options.originRef or tes3.player
+	local targetRef = options.targetRef
+	local ignoreList = options.ignoreList
+	local useModelCoordinates
+	local useBackTriangles
+	local maxDistance
+	local cell = options.cell
 
-    if this.cellIsInterior() then
-        return false
+    if this.cellIsInterior(cell) then
+        return true
     end
 
-    local sheltered = false
-    local match = false
-    local reference = tes3.player
+	local height = originRef.object.boundingBox
+	and originRef.object.boundingBox.max.z or 0
 
-	this.debugLog("RayTesting if sheltered by static: " .. tostring(targetRef))
+	-- It seems that rayTest returns more accurate results for
+	-- tes3.player if using back triangles and better results for
+	-- statics when using model coordinates.
 
-    local height = reference.object.boundingBox
-        and reference.object.boundingBox.max.z or 0
+	if originRef == tes3.player then
+		useModelCoordinates = false
+		useBackTriangles = true
+		-- Max distance from the player going upwards at which
+		-- the ray should stop when testing for a shelter static.
+		-- This value could use some more fine-tuning but finding
+		-- a goldylocks value for every possible scenario and 3D model
+		-- can be rather difficult (if not impossible).
+		maxDistance = 300
+	else
+		useModelCoordinates = true
+		useBackTriangles = false
+		maxDistance = 500
+	end
 
-    local results = tes3.rayTest{
+	--this.debugLog("[rayTest] Performing test on origin ref: " .. tostring(originRef))
+
+    local hitResults = tes3.rayTest{
         position = {
-            reference.position.x,
-            reference.position.y,
-            reference.position.z + (height/2)
+            originRef.position.x,
+            originRef.position.y,
+            originRef.position.z + (height/2)
         },
         direction = {0, 0, 1},
         findAll = true,
-        maxDistance = 5000,
-        ignore = {reference},
-        useBackTriangles = true,
+        maxDistance = maxDistance,
+        ignore = {originRef},
+		useModelCoordinates = useModelCoordinates,
+        useBackTriangles = useBackTriangles,
     }
-    if results then
-        for _, result in ipairs(results) do
-            match = false
-            if result and result.reference and result.reference.object then
-                sheltered =
-                    ( result.reference.object.objectType == tes3.objectType.static or
-                    result.reference.object.objectType == tes3.objectType.activator ) == true
-				if result.reference.object.id:lower() == targetRef.object.id:lower() then
-					match = true
+    if hitResults then
+		--this.debugLog("[rayTest] Got results.")
+        for _, hit in ipairs(hitResults) do
+            if hit and hit.reference and hit.reference.object then
+				if (hit.reference.object.objectType == tes3.objectType.static)
+				or (hit.reference.object.objectType == tes3.objectType.activator) then
+					if ignoreList and this.findMatch(ignoreList, hit.reference.object.id:lower()) then
+						--this.debugLog("[rayTest] Ignoring result -> " .. hit.reference.object.id:lower())
+						goto continue
+					end
+					if targetRef then
+						if (hit.reference.object.id:lower() == targetRef.object.id:lower()) then
+							--this.debugLog("[rayTest] Matched target ref -> " .. tostring(targetRef))
+							return true
+						else
+							--this.debugLog("[rayTest] Did not match target ref -> " .. tostring(targetRef))
+							return false
+						end
+					end
+					--this.debugLog("[rayTest] Ref " .. tostring(originRef) .. " is sheltered by " .. hit.reference.object.id:lower())
+					return true
 				end
-                if sheltered == true then
-                    break
-                end
             end
+			:: continue ::
         end
     end
-	if (sheltered and match) then
-		this.debugLog("RayTest matched for " .. tostring(targetRef))
-		return true
-	else
-		this.debugLog("RayTest did not match for " .. tostring(targetRef))
-		return false
-	end
+	--this.debugLog("[rayTest] Ref " .. tostring(originRef) .. " is NOT sheltered.")
+	return false
 end
 
 return this

@@ -5,7 +5,7 @@ local this = {}
 local common = require("tew.AURA.common")
 local debugLog = common.debugLog
 
-local STEP = 0.015
+local TIME = 0.5
 local TICK = 0.1
 local MAX = 1
 local MIN = 0
@@ -15,14 +15,19 @@ local crossFadeTimer
 this.crossFadeRunning = false
 this.fadeRunning = false
 
-local function playWithZeroVolume(track, ref)
-    debugLog("Playing with zero volume: " .. tostring(track) .. "->" .. tostring(ref))
+local function playTrack(options)
+    local track = options.track
+    local ref = options.reference or tes3.mobilePlayer.reference
+    local volume = options.volume or MIN
+    local pitch = options.pitch or MAX
+    if not track then return end
+    debugLog(string.format("Playing with volume %s: %s -> %s", volume, track.id, tostring(ref)))
     tes3.playSound {
         sound = track,
         loop = true,
         reference = ref,
-        volume = MIN,
-        pitch = MAX
+        volume = volume,
+        pitch = pitch,
     }
 end
 
@@ -30,13 +35,15 @@ end
 local function parse(options)
     local ref = options.reference or tes3.mobilePlayer.reference
     local track = options.track
-    local fadeStep = options.fadeStep
     local fadeType = options.fadeType
     local volume = options.volume or MAX
+    local pitch = options.pitch or MAX
+    local targetDuration = options.duration or TIME
     local currentVolume
 
-    local TIME = TICK * volume / fadeStep
+    local fadeStep = TICK * volume / targetDuration
 	local ITERS = math.ceil(volume / fadeStep)
+    local fadeDuration = TICK * ITERS
 
     if not track then
         debugLog("No track to fade " .. fadeType .. ". Returning.")
@@ -44,10 +51,10 @@ local function parse(options)
     end
 
     if fadeType == "in" then
-        playWithZeroVolume(track, ref)
+        playTrack{track = track, reference = ref, volume = MIN, pitch = pitch}
         currentVolume = MIN
     else
-        currentVolume = MAX
+        currentVolume = volume
     end
 
     if (not tes3.getSoundPlaying{sound = track, reference = ref}) then
@@ -55,20 +62,20 @@ local function parse(options)
         return
     end
 
-    debugLog("Running fade " .. fadeType .. " for: " .. tostring(track))
+    debugLog("Running fade " .. fadeType .. " for: " .. track.id)
 
     local function fader()
         if fadeType == "in" then
             currentVolume = currentVolume + fadeStep
+            if currentVolume > volume then currentVolume = volume end
         else
             currentVolume = currentVolume - fadeStep
+            if currentVolume < 0 then currentVolume = 0 end
         end
-        if currentVolume < 0 then currentVolume = 0 end
-        if currentVolume > 1 then currentVolume = 1 end
     
-        tes3.adjustSoundVolume{sound = track, volume = currentVolume, reference = ref}
+        debugLog(string.format("Adjusting volume %s: %s -> %s | %.3f", fadeType, track.id, tostring(ref), currentVolume))
 
-        debugLog(string.format("Adjusting volume %s: %s -> %s | %.3f", fadeType, tostring(track), tostring(ref), currentVolume))
+        tes3.adjustSoundVolume{sound = track, volume = currentVolume, reference = ref}
     end
 
     this.fadeRunning = true
@@ -81,14 +88,14 @@ local function parse(options)
 
     fadeTimer = timer.start{
         iterations = 1,
-        duration = TIME + 0.1,
+        duration = fadeDuration + 0.1,
         callback = function()
             if fadeType == "out" then
                 if tes3.getSoundPlaying{sound = track, reference = ref} then
                     tes3.removeSound{sound = track, reference = ref}
                 end
             end
-            debugLog(string.format("Fade %s for %s finished in %.3f s.", fadeType, tostring(track), TIME))
+            debugLog(string.format("Fade %s for %s finished in %.3f s.", fadeType, track.id, fadeDuration))
             this.fadeRunning = false
         end
     }
@@ -119,33 +126,41 @@ function this.fadeOut(options)
 end
 
 function this.crossFade(options)
+    local volume = options.volume or MAX
+    local pitch = options.pitch or MAX
     local trackOld = options.trackOld
     local trackNew = options.trackNew
     local refOld = options.refOld
     local refNew = options.refNew
-    local fadeInStep = options.fadeInStep or STEP
-    local fadeOutStep = options.fadeOutStep or STEP
-    local volume = options.volume or MAX
-    local TIME = (TICK*volume/fadeInStep) + (TICK*volume/fadeOutStep)
-
-    debugLog("Running crossfade for: " .. tostring(trackOld) .. ", " .. tostring(trackNew))
-    debugLog("Crossfading from old ref " .. tostring(refOld) .. " to new ref " .. tostring(refNew))
+    local fadeInDuration = options.fadeInDuration
+    local fadeOutDuration = options.fadeOutDuration
+    local fadeInStep = TICK*volume/fadeInDuration
+    local fadeOutStep = TICK*volume/fadeOutDuration
+    local ITERS = (math.ceil(volume / fadeInStep)) + (math.ceil(volume / fadeOutStep))
+    local crossFadeDuration = TICK * ITERS
     
+    if not trackOld or not trackNew then return end
+    debugLog("Running crossfade for: " .. trackOld.id .. ", " .. trackNew.id)
+    debugLog("Crossfading from old ref " .. tostring(refOld) .. " to new ref " .. tostring(refNew))
     this.crossFadeRunning = true
     this.fadeOut({
         track = trackOld,
         reference = refOld,
-        fadeStep = fadeOutStep,
+        volume = volume,
+        duration = fadeOutDuration,
     })
     this.fadeIn({
         track = trackNew,
         reference = refNew,
-        fadeStep = fadeInStep,
+        volume = volume,
+        pitch = pitch,
+        duration = fadeInDuration,
     })
     crossFadeTimer = timer.start{
         iterations = 1,
-        duration = TIME + 0.2,
+        duration = crossFadeDuration + 0.2,
         callback = function()
+            debugLog(string.format("Crossfade took %.3f s.", crossFadeDuration))
             this.crossFadeRunning = false
         end
     }
