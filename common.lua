@@ -111,7 +111,7 @@ function this.getWindoors(cell)
 end
 
 -- Pass me a table and an element and I'll tell you the index it's stored at --
-function getIndex(tab, elem)
+function this.getIndex(tab, elem)
 	local index = nil
 	for i, v in ipairs(tab) do
 		if (v == elem) then
