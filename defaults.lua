@@ -50,5 +50,6 @@ return {
     disabledTaverns = {},
     windVol = 110,
     playInteriorWind = true,
+    playRainOnStatics = true,
     language = "tew.AURA.i18n.en",
 }

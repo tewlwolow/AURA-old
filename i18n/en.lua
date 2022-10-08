@@ -103,6 +103,7 @@ this.messages = {
 	misc = "Misc",
 	miscDesc = "Plays various miscellaneous sounds.",
 	rainSounds = "Enable variable rain sounds per max particles?",
+	rainOnStaticsSounds = "Enable rain sounds on leather/fur/canvas statics outside? Requires variable rain sounds.",
 	windSounds = "Enable variable wind sounds per clouds speed?",
 	playInteriorWind = "Enable wind sounds in interiors? This means the last exterior loop will play on each door and window leading to an exterior.",
 	windVol = "Changes % volume for wind sounds.",
