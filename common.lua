@@ -39,6 +39,8 @@ this.cellTypesSmall = {
 this.cellTypesTent = {
 	"in_ashl_tent_0",
 	"drs_tnt",
+	"a1_dat_srt_in_0", -- Sea Rover's Tent
+	"_ser_tent_in", -- On the move - the ashlander tent deluxe remod
 }
 
 -- String bit to match against window object ids --
@@ -180,7 +182,7 @@ function this.isRefSheltered(options)
 		maxDistance = 500
 	end
 
-	--this.debugLog("[rayTest] Performing test on origin ref: " .. tostring(originRef))
+	this.debugLog("[rayTest] Performing test on origin ref: " .. tostring(originRef))
 
     local hitResults = tes3.rayTest{
         position = {
@@ -196,32 +198,32 @@ function this.isRefSheltered(options)
         useBackTriangles = useBackTriangles,
     }
     if hitResults then
-		--this.debugLog("[rayTest] Got results.")
+		this.debugLog("[rayTest] Got results.")
         for _, hit in ipairs(hitResults) do
             if hit and hit.reference and hit.reference.object then
 				if (hit.reference.object.objectType == tes3.objectType.static)
 				or (hit.reference.object.objectType == tes3.objectType.activator) then
 					if ignoreList and this.findMatch(ignoreList, hit.reference.object.id:lower()) then
-						--this.debugLog("[rayTest] Ignoring result -> " .. hit.reference.object.id:lower())
+						this.debugLog("[rayTest] Ignoring result -> " .. hit.reference.object.id:lower())
 						goto continue
 					end
 					if targetRef then
 						if (hit.reference.object.id:lower() == targetRef.object.id:lower()) then
-							--this.debugLog("[rayTest] Matched target ref -> " .. tostring(targetRef))
+							this.debugLog("[rayTest] Matched target ref -> " .. tostring(targetRef))
 							return true
 						else
-							--this.debugLog("[rayTest] Did not match target ref -> " .. tostring(targetRef))
+							this.debugLog("[rayTest] Did not match target ref -> " .. tostring(targetRef))
 							return false
 						end
 					end
-					--this.debugLog("[rayTest] Ref " .. tostring(originRef) .. " is sheltered by " .. hit.reference.object.id:lower())
+					this.debugLog("[rayTest] Ref " .. tostring(originRef) .. " is sheltered by " .. hit.reference.object.id:lower())
 					return true
 				end
             end
 			:: continue ::
         end
     end
-	--this.debugLog("[rayTest] Ref " .. tostring(originRef) .. " is NOT sheltered.")
+	this.debugLog("[rayTest] Ref " .. tostring(originRef) .. " is NOT sheltered.")
 	return false
 end
 

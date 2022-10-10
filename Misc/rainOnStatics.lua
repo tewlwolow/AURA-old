@@ -48,6 +48,7 @@ local INTERVAL = 0.5 -- The lower this value, the snappier the fades
 local rainyStatics = {
 	"flag",
 	"tent",
+	"a1_dat_srt_ext", -- Sea Rover's Tent
 	"skin",
 	"shed", -- sheds are generally made out of wood, but so are some awnings
 	"fabric",
@@ -67,7 +68,8 @@ local shelterStatics = {
 
 local blockedStatics = {
 	"bannerpost",
-	"bannerhanger", -- Tamriel_Data
+	"_at_banner", -- On the move bannerpost
+	"hanger",
 	"ex_ashl_banner", -- vanilla bannerpost
 	"flagpole",
 	"flagon", -- OAAB_Data
@@ -82,7 +84,10 @@ local rayTestIgnoreStatics = {
 	-- and move on to the next result. e.g.: A banner can't be sheltered
 	-- by the railing it hangs from, or by another banner. (Inception!)
 	"signpost",
+	"signpole",
+	"_pole",
 	"railing",
+	"hanger",
 	"banner",
 	"_ban_",
 	"flag",
@@ -110,19 +115,24 @@ local exemptedFromShelteredTest = {
 }
 
 local function isRelevantRef(ref)
-	-- We are interested in both statics and activators. Also checking if
+	-- We are interested in both statics and activators. Skipping location
+	-- markers because they are invisible in-game. Also checking if
 	-- the ref is deleted because even if they are, they get caught by
 	-- cell:iterateReferences. As for ref.disabled, some mods disable
 	-- instead of delete refs, but it's actually useful if used correctly.
 	-- Gotta be extra careful not to call this function when a ref is
 	-- deactivated, because its "disabled" property will be true.
+	-- Also skipping refs with no implicit tempData tables because they're
+	-- most likely not interesting to us. A location marker is one of them.
 	if ref.object
 	and ((ref.object.objectType == tes3.objectType.static) or
 		((ref.object.objectType == tes3.objectType.activator)))
+	and (not ref.object.isLocationMarker)
 	and (not (ref.deleted or ref.disabled))
+	and (ref.tempData)
 	then
 		if common.findMatch(blockedStatics, ref.object.id:lower()) then
-			--debugLog("Skipping blocked static: " .. tostring(ref))
+			debugLog("Skipping blocked static: " .. tostring(ref))
 			return false
 		end
 		if common.findMatch(rainyStatics, ref.object.id:lower()) then
@@ -193,9 +203,9 @@ local function addToCache(ref)
 			ref.tempData.tew.sheltered = common.isRefSheltered{originRef = ref, ignoreList = rayTestIgnoreStatics}
 		end
 		table.insert(staticsCache, ref)
-		--debugLog("Added static " .. tostring(ref) .. " to cache. staticsCache: " .. #staticsCache)
+		debugLog("Added static " .. tostring(ref) .. " to cache. staticsCache: " .. #staticsCache)
 	else
-		--debugLog("Already in cache: " .. tostring(ref))
+		debugLog("Already in cache: " .. tostring(ref))
 	end
 end
 
@@ -220,7 +230,7 @@ local function removeFromCache(ref)
 		currentShelter.volume = nil
 		currentShelter.sound = nil
 	end
-	--debugLog("Removed static " .. tostring(ref) .. " from cache. staticsCache: " .. #staticsCache)
+	debugLog("Removed static " .. tostring(ref) .. " from cache. staticsCache: " .. #staticsCache)
 end
 
 -- Decide whether to add or remove sounds depending on weather type, distance to ref,
