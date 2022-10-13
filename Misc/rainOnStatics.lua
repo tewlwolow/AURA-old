@@ -48,6 +48,7 @@ local INTERVAL = 0.5 -- The lower this value, the snappier the fades
 local rainyStatics = {
 	"flag",
 	"tent",
+	"drs_tnt",
 	"a1_dat_srt_ext", -- Sea Rover's Tent
 	"skin",
 	"shed", -- sheds are generally made out of wood, but so are some awnings
@@ -57,6 +58,7 @@ local rainyStatics = {
 	"_ban_", -- also banner
 	"overhang",
 	"marketstand", -- relevant Tamriel_Data and OAAB_Data assets
+	"gather",
 }
 
 local shelterStatics = {
@@ -92,6 +94,7 @@ local rayTestIgnoreStatics = {
 	"_ban_",
 	"flag",
 	"hv_de_setveloth_beam_01", -- wood log used as a flag hanger in Heart of the Velothi - Gnisis
+	"ex_t_brace_01", -- used as a banner hanger
 }
 
 local exemptedFromShelteredTest = {

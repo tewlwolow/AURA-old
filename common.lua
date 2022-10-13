@@ -39,8 +39,14 @@ this.cellTypesSmall = {
 this.cellTypesTent = {
 	"in_ashl_tent_0",
 	"drs_tnt",
+	"_in_drs_tnt_0",
 	"a1_dat_srt_in_0", -- Sea Rover's Tent
 	"_ser_tent_in", -- On the move - the ashlander tent deluxe remod
+	"t_de_set_i_tent_0", -- Tamriel_Data
+	"t_orc_setnomad_i_tent_0", -- Tamriel_Data
+	"rpnr_in_ashl_tent_0",
+	"rpnr_t_de_set_i_tent_0",
+	"rpnr_tent_bannered", -- yup, interior
 }
 
 -- String bit to match against window object ids --
