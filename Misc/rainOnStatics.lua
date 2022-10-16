@@ -43,7 +43,7 @@ local playingBlocked
 local staticsCache = {}
 local currentShelter = {}
 
-local INTERVAL = 0.5 -- The lower this value, the snappier the fades
+local INTERVAL = 0.55 -- The lower this value, the snappier the fades
 
 local rainyStatics = {
 	"flag",
