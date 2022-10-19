@@ -5,7 +5,7 @@ local windPlaying = false
 local config = require("tew.AURA.config")
 local playInteriorWind = config.playInteriorWind
 local windVol = (config.windVol / 200)
-local windType
+local windType, cell
 local windTypeLast, cellLast
 local interiorTimer
 local windoors = {}
@@ -101,7 +101,7 @@ local function windCheck(e)
         return
     end
 
-    local cell = tes3.getPlayerCell()
+    cell = tes3.getPlayerCell()
     local useLast = (cellLast and common.checkCellDiff(cell, cellLast) == true and windType == windTypeLast)
 
     if not (windPlaying) or (windTypeLast ~= windType) or (common.checkCellDiff(cell, cellLast)) then
