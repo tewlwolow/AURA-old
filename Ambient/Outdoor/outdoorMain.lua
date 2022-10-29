@@ -53,6 +53,9 @@ local function weatherParser(options)
 		debugLog("Extreme weather detected.")
 		sounds.remove { module = moduleName, reference = ref, volume = OAvol }
 		return
+	else
+		debugLog("Uneligible weather detected. Returning.")
+		return
 	end
 end
 
@@ -223,8 +226,13 @@ local function cellCheck()
 			windoors = nil
 			windoors = common.getWindoors(cell)
 			if windoors ~= nil then
-				for _, windoor in ipairs(windoors) do
-					playInteriorBig(windoor, useLast)
+				for i, windoor in ipairs(windoors) do
+					sounds.removeImmediate { module = moduleName, reference = windoor }
+					if i == 1 then
+						playInteriorBig(windoor, useLast)
+					else
+						playInteriorBig(windoor, true)
+					end
 				end
 				interiorTimer:resume()
 			end
