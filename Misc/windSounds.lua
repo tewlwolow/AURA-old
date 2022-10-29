@@ -72,12 +72,28 @@ local function windCheck(e)
         interiorTimer:pause()
     end
 
+    cell = tes3.getPlayerCell()
+
+    if (not cell) then
+		debugLog("No cell detected. Returning.")
+        sounds.remove { module = moduleName, volume = windVol }
+        windPlaying = false
+		return
+	end
+	debugLog("Cell: " .. cell.editorName)
+
     -- Determine if we're transitioning --
     local weather
     if e and e.to then
         weather = e.to
     else
-        weather = WtC.currentWeather
+        -- We need proper weather/cloudsSpeed resolution if cell is interior.
+        -- Otherwise, WtC data won't update unless you step outside.
+        if cell.isInterior then
+            weather = tes3.getRegion({ useDoors = true }).weather
+        else
+            weather = WtC.currentWeather
+        end
     end
 
     -- Bugger off if weather is blocked --
@@ -101,8 +117,7 @@ local function windCheck(e)
         return
     end
 
-    cell = tes3.getPlayerCell()
-    local useLast = (cellLast and common.checkCellDiff(cell, cellLast) == true and windType == windTypeLast)
+    local useLast = (cellLast and common.checkCellDiff(cell, cellLast) == true and windType == windTypeLast) or false
 
     if not (windPlaying) or (windTypeLast ~= windType) or (common.checkCellDiff(cell, cellLast)) then
 
@@ -140,7 +155,7 @@ local function windCheck(e)
                         for i, windoor in ipairs(windoors) do
                             sounds.removeImmediate { module = moduleName, reference = windoor }
                             if i == 1 then
-                                playWind(windoor, false, windoorVol, 0.8)
+                                playWind(windoor, useLast, windoorVol, 0.8)
                             else
                                 playWind(windoor, true, windoorVol, 0.8)
                             end
