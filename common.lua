@@ -51,6 +51,7 @@ this.cellTypesTent = {
 
 -- String bit to match against window object ids --
 this.windows = {
+	"winkynaret",
 	"_win_",
 	"window",
 	"cwin",
