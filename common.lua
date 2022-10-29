@@ -102,7 +102,7 @@ function this.getWindoors(cell)
 		end
 	end
 
-	if #windoors == 0 then
+	if table.empty(windoors) then
 		return nil
 	else
 		for stat in cell:iterateReferences(tes3.objectType.static) do

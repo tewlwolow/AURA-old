@@ -222,7 +222,7 @@ local function cellCheck()
 			sounds.removeImmediate { module = moduleName } -- Needed to catch previous OA refs --
 			windoors = nil
 			windoors = common.getWindoors(cell)
-			if windoors ~= nil then
+			if windoors and not table.empty(windoors) then
 				for _, windoor in ipairs(windoors) do
 					playInteriorBig(windoor, useLast)
 				end
