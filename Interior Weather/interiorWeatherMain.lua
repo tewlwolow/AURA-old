@@ -129,8 +129,10 @@ local function playThunder()
 			thunderTimerBig:cancel()
 			thunderTimerBig = nil
 		end
-		thunRef = windoors[math.random(1, #windoors)]
-		thunderTimerBig = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
+		if windoors and not table.empty(windoors) then
+			thunRef = windoors[math.random(1, #windoors)]
+			thunderTimerBig = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
+		end
 	elseif interiorType == "sma" or interiorType == "ten" then
 		if thunderTimerSmall then
 			thunderTimerSmall:pause()
@@ -229,7 +231,7 @@ local function cellCheck()
 	if common.checkCellDiff(cell, cellLast) then
 		debugLog("Cell type changed, resetting module sounds.")
 		sounds.removeImmediate { module = moduleName }
-		if windoors ~= {} and windoors ~= nil then
+		if windoors and not table.empty(windoors) then
 			for _, windoor in ipairs(windoors) do
 				sounds.removeImmediate { module = moduleName, reference = windoor }
 			end
@@ -268,7 +270,7 @@ local function cellCheck()
 	if (blockedWeathers[weather]) or ((WtC.nextWeather) and (blockedWeathers[WtC.nextWeather])) then
 		debugLog("Uneligible weather detected. Returning.")
 		sounds.remove { module = moduleName }
-		if windoors ~= {} and windoors ~= nil then
+		if windoors and not table.empty(windoors) then
 			for _, windoor in ipairs(windoors) do
 				sounds.removeImmediate { module = moduleName, reference = windoor }
 			end
@@ -339,7 +341,7 @@ local function cellCheck()
 		end
 	else
 		interiorType = "big"
-		if windoors and windoors[1] ~= nil then
+		if windoors and not table.empty(windoors) then
 			debugLog("Playing big interior sounds.")
 			for _, windoor in ipairs(windoors) do
 				sounds.removeImmediate { module = moduleName, reference = windoor }
