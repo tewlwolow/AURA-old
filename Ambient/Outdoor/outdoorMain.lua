@@ -71,7 +71,7 @@ local function updateInteriorBig()
 	debugLog("Updating interior doors and windows.")
 	local playerPos = tes3.player.position
 	for _, windoor in ipairs(windoors) do
-		if playerPos:distance(windoor.position:copy()) > 2000 -- A bit less then cutoff, just to be sure. Shouldn't be too jarring --
+		if playerPos:distance(windoor.position:copy()) > 900 -- A bit less then cutoff, just to be sure. Shouldn't be too jarring --
 			and windoor ~= nil then
 			playInteriorBig(windoor, true)
 		end
