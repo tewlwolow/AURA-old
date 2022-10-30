@@ -62,11 +62,11 @@ local soundData = {
 	},
     ["ten"] = {
         [4] = {
-            volume = 0.9,
+            volume = 1.0,
             pitch = 1.0
         },
         [5] = {
-            volume = 1.0,
+            volume = 0.9,
             pitch = 1.0
         },
         [6] = {
