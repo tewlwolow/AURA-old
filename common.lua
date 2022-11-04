@@ -130,6 +130,21 @@ function this.getIndex(tab, elem)
 	return index
 end
 
+-- Emulates a set of unique elements. This function adds a new element to the set. --
+function this.setInsert(tab, elem)
+	if not this.getIndex(tab, elem) then
+		table.insert(tab, elem)
+	end
+end
+
+-- Emulates a set of unique elements. This function removes an existing element from the set. --
+function this.setRemove(tab, elem)
+	local index = this.getIndex(tab, elem)
+	if index then
+		table.remove(tab, index)
+	end
+end
+
 function this.findMatch(stringArray, str)
 	for _, pattern in pairs(stringArray) do
 		if string.find(str, pattern) then
@@ -137,6 +152,10 @@ function this.findMatch(stringArray, str)
 		end
 	end
 	return false
+end
+
+function this.isTimerAlive(t)
+    return t and t.state and (t.state < 2) or false
 end
 
 function this.cellIsInterior(cell)

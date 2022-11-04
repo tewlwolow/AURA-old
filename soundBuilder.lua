@@ -2,7 +2,7 @@ local this = {}
 
 -- Imports
 local common = require("tew.AURA.common")
-local sounds = require("tew.AURA.sounds")
+local soundData = require("tew.AURA.soundData")
 
 -- Load logger
 local debugLog = common.debugLog
@@ -64,16 +64,16 @@ local function buildClearSounds()
 	debugLog("|---------------------- Building clear weather table. ----------------------|\n")
 	for climate in lfs.dir(AURAdir .. climDir) do
 		if climate ~= ".." and climate ~= "." then
-			sounds.clear[climate] = {}
+			soundData.clear[climate] = {}
 			for time in lfs.dir(AURAdir .. climDir .. climate) do
 				if time ~= ".." and time ~= "." then
-					sounds.clear[climate][time] = {}
+					soundData.clear[climate][time] = {}
 					for soundfile in lfs.dir(AURAdir .. climDir .. climate .. "\\" .. time) do
 						if soundfile ~= ".." and soundfile ~= "." then
 							if string.endswith(soundfile, ".wav") then
 								local objectId = string.sub(climate .. "_" .. time .. "_" .. soundfile, 1, -5)
 								local filename = soundDir .. climDir .. climate .. "\\" .. time .. "\\" .. soundfile
-								createSound(objectId, filename, sounds.clear[climate][time])
+								createSound(objectId, filename, soundData.clear[climate][time])
 							end
 						end
 					end
@@ -98,12 +98,12 @@ end
 -- Populated --
 local function buildPopulatedSounds()
 	debugLog("|---------------------- Building populated sounds table. ----------------------|\n")
-	for populatedType, _ in pairs(sounds.populated) do
+	for populatedType, _ in pairs(soundData.populated) do
 		for soundfile in lfs.dir(AURAdir .. popDir .. populatedType) do
 			if soundfile and soundfile ~= ".." and soundfile ~= "." and string.endswith(soundfile, ".wav") then
 				local objectId = string.sub("P_" .. populatedType .. "_" .. soundfile, 1, -5)
 				local filename = soundDir .. popDir .. populatedType .. "\\" .. soundfile
-				createSound(objectId, filename, sounds.populated[populatedType])
+				createSound(objectId, filename, soundData.populated[populatedType])
 			end
 		end
 	end
@@ -112,12 +112,12 @@ end
 -- Interior --
 local function buildInteriorSounds()
 	debugLog("|---------------------- Building interior sounds table. ----------------------|\n")
-	for interiorType, _ in pairs(sounds.interior) do
+	for interiorType, _ in pairs(soundData.interior) do
 		for soundfile in lfs.dir(AURAdir .. interiorDir .. interiorType) do
 			if soundfile and soundfile ~= ".." and soundfile ~= "." and string.endswith(soundfile, ".wav") then
 				local objectId = string.sub("I_" .. interiorType .. "_" .. soundfile, 1, -5)
 				local filename = soundDir .. interiorDir .. interiorType .. "\\" .. soundfile
-				createSound(objectId, filename, sounds.interior[interiorType])
+				createSound(objectId, filename, soundData.interior[interiorType])
 			end
 		end
 	end
@@ -130,7 +130,7 @@ local function buildTavernSounds()
 			if soundfile and soundfile ~= ".." and soundfile ~= "." and string.endswith(soundfile, ".wav") then
 				local objectId = string.sub("I_tav_" .. folder .. "_" .. soundfile, 1, -5)
 				local filename = soundDir .. interiorDir .. "tav\\" .. folder .. "\\" .. soundfile
-				createSound(objectId, filename, sounds.interior["tav"][folder])
+				createSound(objectId, filename, soundData.interior["tav"][folder])
 			end
 		end
 	end
@@ -147,8 +147,8 @@ local function buildWeatherSounds()
 
 	filename = soundDir .. wDir .. "\\big\\rm.wav"
 	objectId = "tew_b_rainmedium"
-	createSound(objectId, filename, sounds.interiorWeather["big"], 4)
-	createSound(objectId, filename, sounds.interiorWeather["big"], 5)
+	createSound(objectId, filename, soundData.interiorWeather["big"], 4)
+	createSound(objectId, filename, soundData.interiorWeather["big"], 5)
 
 	filename = soundDir .. wDir .. "\\big\\rh.wav"
 	objectId = "tew_b_rainheavy"
@@ -160,8 +160,8 @@ local function buildWeatherSounds()
 
 	filename = soundDir .. wDir .. "\\sma\\rm.wav"
 	objectId = "tew_s_rainmedium"
-	createSound(objectId, filename, sounds.interiorWeather["sma"], 4)
-	createSound(objectId, filename, sounds.interiorWeather["sma"], 5)
+	createSound(objectId, filename, soundData.interiorWeather["sma"], 4)
+	createSound(objectId, filename, soundData.interiorWeather["sma"], 5)
 
 	filename = soundDir .. wDir .. "\\sma\\rh.wav"
 	objectId = "tew_s_rainheavy"
@@ -173,8 +173,8 @@ local function buildWeatherSounds()
 
 	filename = soundDir .. wDir .. "\\ten\\rm.wav"
 	objectId = "tew_t_rainmedium"
-	createSound(objectId, filename, sounds.interiorWeather["ten"], 4)
-	createSound(objectId, filename, sounds.interiorWeather["ten"], 5)
+	createSound(objectId, filename, soundData.interiorWeather["ten"], 4)
+	createSound(objectId, filename, soundData.interiorWeather["ten"], 5)
 
 	filename = soundDir .. wDir .. "\\ten\\rh.wav"
 	objectId = "tew_t_rainheavy"
@@ -315,10 +315,10 @@ local function getWeatherSounds()
 	local blightSound = tes3.getSound("Blight")
 	local blizzardSound = tes3.getSound("BM Blizzard")
 
-	for type in pairs(sounds.interiorWeather) do
-		table.insert(sounds.interiorWeather[type], 6, ashSound)
-		table.insert(sounds.interiorWeather[type], 7, blightSound)
-		table.insert(sounds.interiorWeather[type], 9, blizzardSound)
+	for type in pairs(soundData.interiorWeather) do
+		table.insert(soundData.interiorWeather[type], 6, ashSound)
+		table.insert(soundData.interiorWeather[type], 7, blightSound)
+		table.insert(soundData.interiorWeather[type], 9, blizzardSound)
 	end
 end
 
@@ -345,9 +345,9 @@ function this.build()
 	manifest = json.loadfile(manifestPath) or {}
 
 	buildClearSounds()
-	buildContextSounds(quietDir, sounds.quiet)
-	buildContextSounds(warmDir, sounds.warm)
-	buildContextSounds(coldDir, sounds.cold)
+	buildContextSounds(quietDir, soundData.quiet)
+	buildContextSounds(warmDir, soundData.warm)
+	buildContextSounds(coldDir, soundData.cold)
 	buildPopulatedSounds()
 	buildInteriorSounds()
 	buildTavernSounds()
