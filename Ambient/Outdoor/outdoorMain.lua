@@ -43,14 +43,14 @@ local function weatherParser(options)
 
 	-- Determine if we should play the sound or not, depending on the weather --
 	if weatherNow >= 0 and weatherNow < 4 then
-		debugLog("Playing regular weather track.")
+		--debugLog("Playing regular weather track.") -- Makes logging too verbose when updating windoors.
 		if immediate then
 			sounds.playImmediate { module = moduleName, climate = climateNow, time = timeNow, volume = volume, pitch = pitch, reference = ref, last = playLast }
 		else
 			sounds.play { module = moduleName, climate = climateNow, time = timeNow, volume = volume, pitch = pitch, reference = ref, last = playLast }
 		end
 	elseif weatherNow == 6 or weatherNow == 7 or weatherNow == 9 then
-		debugLog("Extreme weather detected.")
+		debugLog("Extreme weather detected. Returning.")
 		sounds.remove { module = moduleName, reference = ref, volume = OAvol }
 		return
 	else
@@ -71,7 +71,7 @@ local function updateInteriorBig()
 	debugLog("Updating interior doors and windows.")
 	local playerPos = tes3.player.position
 	for _, windoor in ipairs(windoors) do
-		if playerPos:distance(windoor.position:copy()) > 900 -- A bit less then cutoff, just to be sure. Shouldn't be too jarring --
+		if playerPos:distance(windoor.position:copy()) < 1800 -- A bit less then cutoff, just to be sure. Shouldn't be too jarring --
 			and windoor ~= nil then
 			playInteriorBig(windoor, true)
 		end
@@ -166,12 +166,14 @@ local function cellCheck()
 		and (common.checkCellDiff(cell, cellLast) == false
 			or cell == cellLast) then
 		debugLog("Same conditions. Returning.")
+		if cell.isInterior and interiorTimer then interiorTimer:reset() end
 		return
 	elseif timeNow ~= timeLast
 		and weatherNow == weatherLast
 		and (common.checkCellDiff(cell, cellLast) == false)
 		and ((weatherNow >= 4 and weatherNow < 6) or (weatherNow == 8)) then
 		debugLog("Time changed but weather didn't. Returning.")
+		if cell.isInterior and interiorTimer then interiorTimer:reset() end
 		return
 	end
 
@@ -194,14 +196,15 @@ local function cellCheck()
 			-- Using the same track when entering int/ext in same area; time/weather change will randomise it again --
 			debugLog("Found same cell. Using last sound.")
 			useLast = true
+			sounds.removeImmediate { module = moduleName }
 			sounds.play { module = moduleName, last = useLast, volume = OAvol }
 		else
 			debugLog("Found different exterior cell. Using new sound.")
 			sounds.remove { module = moduleName, volume = OAvol }
 			weatherParser { volume = OAvol }
 		end
-		-- Interior cells --
-		-- Remove main outdoor sound and play the same sound for interiors, either big or small --
+	-- Interior cells --
+	-- Remove main outdoor sound and play the same sound for interiors, either big or small --
 	elseif cell.isInterior then
 		if cellLast and common.checkCellDiff(cell, cellLast) == true and timeNow == timeLast
 			and weatherNow == weatherLast and climateNow == climateLast
@@ -216,13 +219,13 @@ local function cellCheck()
 			return
 		end
 		debugLog("Found interior cell.")
+		sounds.removeImmediate { module = moduleName } -- Needed to catch previous OA refs --
 		if common.getCellType(cell, common.cellTypesSmall) == true
 			or common.getCellType(cell, common.cellTypesTent) == true then
 			debugLog("Found small interior cell. Playing interior loops.")
 			playInteriorSmall(useLast)
 		else
 			debugLog("Found big interior cell. Playing interior loops.")
-			sounds.removeImmediate { module = moduleName } -- Needed to catch previous OA refs --
 			windoors = nil
 			windoors = common.getWindoors(cell)
 			if windoors and not table.empty(windoors) then
@@ -234,7 +237,7 @@ local function cellCheck()
 						playInteriorBig(windoor, true)
 					end
 				end
-				interiorTimer:resume()
+				interiorTimer:reset()
 			end
 		end
 	end

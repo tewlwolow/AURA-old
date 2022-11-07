@@ -1,9 +1,9 @@
-local sounds = require("tew.AURA.sounds")
 local common = require("tew.AURA.common")
+local soundData = require("tew.AURA.soundData")
 local debugLog = common.debugLog
 local fader = require("tew.AURA.fader")
 
-local soundData = {
+local soundConfig = {
 	["tew_t_rainlight"] = {
 		[4] = {
 			volume = 1.0,
@@ -42,6 +42,7 @@ local playerRef
 local playingBlocked
 local staticsCache = {}
 local currentShelter = {}
+local moduleName = "rainOnStatics"
 
 local INTERVAL = 0.55 -- The lower this value, the snappier the fades
 
@@ -146,7 +147,7 @@ local function isRelevantRef(ref)
 end
 
 local function removeSound(ref)
-	for trackName, arr in pairs(soundData) do
+	for trackName in pairs(soundConfig) do
 		if tes3.getSoundPlaying{
 			sound = trackName,
 			reference = ref
@@ -173,6 +174,7 @@ local function clearCurrentShelter()
 	if currentShelter.sound then
 		debugLog(currentShelter.sound.id .. " playing on playerRef. Running fadeOut.")
 		fader.fadeOut({
+			module = moduleName,
 			volume = currentShelter.volume,
 			reference = playerRef,
 			track = currentShelter.sound,
@@ -192,7 +194,7 @@ local function addToCache(ref)
 	-- Resetting the timer on every add to kind of block it
 	-- from running while the cache is being populated.
 	if mainTimer then mainTimer:reset() end
-	if (common.cellIsInterior(ref.cell)) or (not isRelevantRef(ref)) then
+	if (not isRelevantRef(ref)) or (common.cellIsInterior(ref.cell)) then
 		return
 	end
 	-- We only add a static to the cache if it's not already in there.
@@ -239,7 +241,7 @@ end
 -- Decide whether to add or remove sounds depending on weather type, distance to ref,
 -- whilst also checking if the player (or the ref itself) is sheltered.
 local function processRef(ref)
-	local sound = sounds.interiorWeather["ten"][WtC.currentWeather.index]
+	local sound = soundData.interiorWeather["ten"][WtC.currentWeather.index]
 	if not sound then return end
 
 	if ref.tempData.tew then
@@ -249,13 +251,13 @@ local function processRef(ref)
 		end
 	end
 
-	if fader.isRunning() then return end
+	if fader.isRunning(moduleName) then return end
 
 	local playerPos = tes3.player.position:copy()
 	local refPos = ref.position:copy()
 	local objId = ref.object.id:lower()
-	local volume = soundData[sound.id][WtC.currentWeather.index].volume
-	local pitch = soundData[sound.id][WtC.currentWeather.index].pitch
+	local volume = soundConfig[sound.id][WtC.currentWeather.index].volume
+	local pitch = soundConfig[sound.id][WtC.currentWeather.index].pitch
 
 	-- Check if sheltered by current ref.
 	-- If we are, then either fadeIn or crossFade.
@@ -268,6 +270,7 @@ local function processRef(ref)
 		if not tes3.getSoundPlaying{sound = sound, reference = ref} then
 			debugLog("[sheltered] Sound not playing on shelter ref. Running fadeIn.")
 			fader.fadeIn({
+				module = moduleName,
 				volume = volume,
 				pitch = pitch,
 				reference = playerRef,
@@ -275,20 +278,26 @@ local function processRef(ref)
 				duration = 0.7,
 			})
 		else
-			debugLog("[sheltered] Sound playing on shelter ref. Running crossFade.")
-			fader.crossFade{
+			debugLog("[sheltered] Sound playing on shelter ref. Running crossfade.")
+			fader.fadeOut({
+				module = moduleName,
 				volume = volume,
 				pitch = pitch,
-				trackOld = sound,
-				trackNew = sound,
-				refOld = ref,
-				refNew = playerRef,
-				fadeInDuration = 0.5,
-				fadeOutDuration = 1,
-			}
+				reference = ref,
+				track = sound,
+				duration = 0.7,
+			})
+			fader.fadeIn({
+				module = moduleName,
+				volume = volume,
+				pitch = pitch,
+				reference = playerRef,
+				track = sound,
+				duration = 0.7,
+			})
 		end
 		-- Also add data to our new shelter so that we remove playerRef
-		-- sound correctly when clearCurrentShelter() gets called.
+		-- sound correctly when player is no longer sheltered by this ref.
 		currentShelter.ref = ref
 		currentShelter.sound = sound
 		currentShelter.volume = volume
@@ -297,14 +306,15 @@ local function processRef(ref)
 
 	-- If we're currently sheltered, then keep checking until not we're not
 	-- sheltered anymore. If we're currently not sheltered, get rid of the
-	-- sound playing on playerRef. Here we can either crossFade (takes longer)
-	-- or just fadeOut. For now, just fadeOut and let a subsequent call to this
-	-- function add ref sound when the fade has finished.
+	-- sound playing on playerRef. Can choose between crossfade or fade out.
+	-- For now, just fade out and let a subsequent call to this function add
+	-- ref sound when the fade has finished.
 
 	if (currentShelter.ref == ref)
 	and (not common.isRefSheltered{originRef = playerRef, targetRef = ref}) then
 		debugLog("[not sheltered] Running fadeOut.")
 		fader.fadeOut({
+			module = moduleName,
 			volume = currentShelter.volume,
 			reference = playerRef,
 			track = currentShelter.sound,
@@ -334,7 +344,7 @@ local function processRef(ref)
 end
 
 local function tick()
-	if fader.isRunning() then
+	if fader.isRunning(moduleName) then
 		debugLog("Fader is running. Returning.")
 		return
 	end
@@ -347,26 +357,14 @@ local function tick()
 		if (not playingBlocked) and (#staticsCache > 0) then
 			-- Best not to clear the cache if it's not raining.
 			-- Just remove any sounds that are currently playing.
-			debugLog("Not raining. Removing any sounds that might be playing.")
+			debugLog("Not raining. Removing sounds.")
 			for _, ref in ipairs(staticsCache) do
 				removeSound(ref)
 			end
 			clearCurrentShelter()
 			playingBlocked = true
-			debugLog("Playing is blocked.")
 		end
 	end
-end
-
-local function runTimer()
-	playerRef = tes3.player
-	debugLog("Starting timer.")
-	mainTimer = timer.start{
-		type = timer.simulate,
-		duration = INTERVAL,
-		iterations = -1,
-		callback = tick
-	}
 end
 
 local function refreshCache()
@@ -376,6 +374,25 @@ local function refreshCache()
 		addToCache(ref)
 	end
 	debugLog("staticsCache currently holds " .. #staticsCache .. " statics.")
+end
+
+local function onLoaded()
+	playerRef = tes3.player
+	-- Refresh is needed on "loaded" to cover edge case when refs wouldn't
+	-- properly reactivate after loading a game in the same cell.
+	debugLog("Refreshing cache.")
+	refreshCache()
+	debugLog("Starting timer.")
+	if mainTimer then
+		mainTimer:reset()
+	else
+		mainTimer = timer.start{
+			type = timer.simulate,
+			duration = INTERVAL,
+			iterations = -1,
+			callback = tick
+		}
+	end
 end
 
 local function onCOC(e)
@@ -424,8 +441,8 @@ end
 
 WtC = tes3.worldController.weatherController
 
-event.register("loaded", runTimer, { priority = -300 })
-event.register("cellChanged", onCOC, { priority = -170 })
+event.register("loaded", onLoaded, { priority = -300 })
+--event.register("cellChanged", onCOC, { priority = -170 }) -- Seems like not needed after all. Let's minimize CPU workload.
 event.register("weatherTransitionFinished", onWeatherTransitionFinished, { priority = -270 })
 event.register("referenceActivated", onReferenceActivated, { priority = -250 })
 event.register("referenceDeactivated", onReferenceDeactivated, { priority = -250 })

@@ -1,5 +1,5 @@
 local config = require("tew.AURA.config")
-local sounds = require("tew.AURA.sounds")
+local soundData = require("tew.AURA.soundData")
 local common = require("tew.AURA.common")
 
 local debugLog = common.debugLog
@@ -75,7 +75,7 @@ local function changeRainSounds()
 
     -- Also change interior rain sounds --
     if config.moduleInteriorWeather then
-        for interiorType, array in pairs(sounds.interiorWeather) do
+        for interiorType, array in pairs(soundData.interiorWeather) do
             array[4] = tes3.getSound(interiorRainLoops[interiorType][rainyType])
             array[5] = tes3.getSound(interiorRainLoops[interiorType][stormyType])
         end

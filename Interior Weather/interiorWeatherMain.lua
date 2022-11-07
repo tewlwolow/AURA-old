@@ -15,7 +15,7 @@ local blockedWeathers = {
 	[8] = true,
 }
 
-local soundData = {
+local soundConfig = {
 	["sma"] = {
 		[4] = {
 			volume = 0.7,
@@ -156,8 +156,8 @@ local function playInteriorSmall(cell)
 	immediateParser {
 		weather = weather,
 		module  = moduleName,
-		volume  = soundData[interiorType][weather].volume * IWvol + volBoost,
-		pitch   = soundData[interiorType][weather].pitch,
+		volume  = soundConfig[interiorType][weather].volume * IWvol + volBoost,
+		pitch   = soundConfig[interiorType][weather].pitch,
 		type    = interiorType
 	}
 end
@@ -168,8 +168,8 @@ local function playInteriorBig(windoor, updateImmediate)
 	immediateParser {
 		weather   = weather,
 		module    = moduleName,
-		volume    = (soundData[interiorType][weather].volume * IWvol) - (0.005 * #windoors),
-		pitch     = soundData[interiorType][weather].pitch,
+		volume    = (soundConfig[interiorType][weather].volume * IWvol) - (0.005 * #windoors),
+		pitch     = soundConfig[interiorType][weather].pitch,
 		type      = interiorType,
 		immediate = updateImmediate,
 		reference = windoor,
