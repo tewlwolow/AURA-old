@@ -36,7 +36,6 @@ local function getWindType(cSpeed)
 end
 
 local function playWind(ref, useLast, vol, pitch)
-    debugLog("Wind type: " .. windType)
     if not vol then vol = windVol end
     sounds.play { module = moduleName, type = windType, volume = vol, pitch = pitch, reference = ref, last = useLast }
     windPlaying = true
@@ -48,7 +47,7 @@ local function updateInteriorBig()
     debugLog("Updating interior doors and windows.")
     local playerPos = tes3.player.position
     for _, windoor in ipairs(windoors) do
-        if playerPos:distance(windoor.position:copy()) > 900 -- Less then cutoff, just to be sure. Shouldn't be too jarring --
+        if playerPos:distance(windoor.position:copy()) < 1800 -- Less then cutoff, just to be sure. Shouldn't be too jarring --
             and windoor ~= nil then
             local windoorVol = (0.4 * windVol) - (0.005 * #windoors)
             playWind(windoor, true, windoorVol, 0.8)
@@ -116,6 +115,7 @@ local function windCheck(e)
         windPlaying = false
         return
     end
+    debugLog("Wind type: " .. windType)
 
     local useLast = (cellLast and common.checkCellDiff(cell, cellLast) == true and windType == windTypeLast) or false
 
@@ -160,7 +160,7 @@ local function windCheck(e)
                                 playWind(windoor, true, windoorVol, 0.8)
                             end
                         end
-                        interiorTimer:resume()
+                        interiorTimer:reset()
                     end
                 end
             end

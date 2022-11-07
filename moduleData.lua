@@ -2,7 +2,6 @@ return {
     ["outdoor"] = {
         old = nil,
         new = nil,
-        blockedTracks = {},
         faderData = {
             ["out"] = {
                 duration = 3.5,
@@ -17,7 +16,6 @@ return {
     ["populated"] = {
         old = nil,
         new = nil,
-        blockedTracks = {},
         faderData = {
             ["out"] = {
                 duration = 4.0,
@@ -32,7 +30,6 @@ return {
     ["interior"] = {
         old = nil,
         new = nil,
-        blockedTracks = {},
         faderData = {
             ["out"] = {
                 duration = 3.0,
@@ -47,7 +44,6 @@ return {
 	["interiorWeather"] = {
         old = nil,
         new = nil,
-        blockedTracks = {},
         faderData = {
             ["out"] = {
                 duration = 5.0,
@@ -62,7 +58,6 @@ return {
     ["wind"] = {
         old = nil,
         new = nil,
-        blockedTracks = {},
         faderData = {
             ["out"] = {
                 duration = 5.0,
@@ -77,7 +72,6 @@ return {
     ["rainOnStatics"] = {
         old = nil,
         new = nil,
-        blockedTracks = {},
         faderData = {
             ["out"] = {
                 duration = 0.7,

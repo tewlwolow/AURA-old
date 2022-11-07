@@ -183,7 +183,6 @@ local function clearCurrentShelter()
 			-- tent waiting for the rain to stop, you want the fade out to be as
 			-- long as possible for extra immersion.
 			duration = 2,
-			noBlockTracks = true,
 		})
 		currentShelter.ref = nil
 		currentShelter.sound = nil
@@ -277,7 +276,6 @@ local function processRef(ref)
 				reference = playerRef,
 				track = sound,
 				duration = 0.7,
-				noBlockTracks = true,
 			})
 		else
 			debugLog("[sheltered] Sound playing on shelter ref. Running crossfade.")
@@ -288,7 +286,6 @@ local function processRef(ref)
 				reference = ref,
 				track = sound,
 				duration = 0.7,
-				noBlockTracks = true,
 			})
 			fader.fadeIn({
 				module = moduleName,
@@ -297,7 +294,6 @@ local function processRef(ref)
 				reference = playerRef,
 				track = sound,
 				duration = 0.7,
-				noBlockTracks = true,
 			})
 		end
 		-- Also add data to our new shelter so that we remove playerRef
@@ -323,7 +319,6 @@ local function processRef(ref)
 			reference = playerRef,
 			track = currentShelter.sound,
 			duration = 0.8,
-			noBlockTracks = true,
 		})
 		-- Since we're no longer sheltered, let's clear shelter data.
 		currentShelter.ref = nil
@@ -372,17 +367,6 @@ local function tick()
 	end
 end
 
-local function runTimer()
-	playerRef = tes3.player
-	debugLog("Starting timer.")
-	mainTimer = timer.start{
-		type = timer.simulate,
-		duration = INTERVAL,
-		iterations = -1,
-		callback = tick
-	}
-end
-
 local function refreshCache()
 	local cell = tes3.getPlayerCell()
 	debugLog("Commencing dump!")
@@ -390,6 +374,25 @@ local function refreshCache()
 		addToCache(ref)
 	end
 	debugLog("staticsCache currently holds " .. #staticsCache .. " statics.")
+end
+
+local function onLoaded()
+	playerRef = tes3.player
+	-- Refresh is needed on "loaded" to cover edge case when refs wouldn't
+	-- properly reactivate after loading a game in the same cell.
+	debugLog("Refreshing cache.")
+	refreshCache()
+	debugLog("Starting timer.")
+	if mainTimer then
+		mainTimer:reset()
+	else
+		mainTimer = timer.start{
+			type = timer.simulate,
+			duration = INTERVAL,
+			iterations = -1,
+			callback = tick
+		}
+	end
 end
 
 local function onCOC(e)
@@ -438,7 +441,7 @@ end
 
 WtC = tes3.worldController.weatherController
 
-event.register("loaded", runTimer, { priority = -300 })
+event.register("loaded", onLoaded, { priority = -300 })
 --event.register("cellChanged", onCOC, { priority = -170 }) -- Seems like not needed after all. Let's minimize CPU workload.
 event.register("weatherTransitionFinished", onWeatherTransitionFinished, { priority = -270 })
 event.register("referenceActivated", onReferenceActivated, { priority = -250 })

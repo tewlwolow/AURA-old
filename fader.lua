@@ -14,10 +14,10 @@ local function parse(options)
     local ref = options.reference or tes3.mobilePlayer.reference
     local track = options.track
     local fadeType = options.fadeType
+	local oppositeType = (fadeType == "out") and "in" or "out"
     local volume = options.volume or MAX
     local pitch = options.pitch or MAX
     local targetDuration = options.duration or moduleData[moduleName].faderData[fadeType].duration
-    local noBlockTracks = options.noBlockTracks or false
     local currentVolume
 	local fadeInProgress = {}
 	local iterTimer
@@ -38,8 +38,13 @@ local function parse(options)
 		return
 	end
 
-	if (noBlockTracks == false) and common.getIndex(moduleData[moduleName].blockedTracks, track) then
-        debugLog(string.format("[%s] wants to fade %s %s but the track is blocked. Trying later.", moduleName, fadeType, track.id))
+	if this.isRunning{
+		module = moduleName,
+		fadeType = oppositeType,
+		track = track,
+		reference = ref,
+	} then
+        debugLog(string.format("[%s] wants to fade %s %s but fade %s is in progress for this track. Trying later.", moduleName, fadeType, track.id, oppositeType))
 		timer.start {
 			callback = function()
 				parse(options)
@@ -70,10 +75,6 @@ local function parse(options)
 
     debugLog(string.format("[%s] Running fade %s for %s -> %s", moduleName, fadeType, track.id, tostring(ref)))
 
-    if (noBlockTracks == false) then
-		common.setInsert(moduleData[moduleName].blockedTracks, track)
-    end
-
 	fadeInProgress.track = track
 	fadeInProgress.ref = ref
 
@@ -90,7 +91,6 @@ local function parse(options)
 			debugLog(string.format("[%s] %s suddenly not playing on ref %s. Canceling fade %s timers.", moduleName, track.id, tostring(ref), fadeType))
 			fadeInProgress.iterTimer:cancel()
 			fadeInProgress.fadeTimer:cancel()
-			common.setRemove(moduleData[moduleName].blockedTracks, track)
 			common.setRemove(moduleData[moduleName].faderData[fadeType].inProgress, fadeInProgress)
 			return
 		end
@@ -117,7 +117,6 @@ local function parse(options)
 					debugLog(string.format("[%s] Track %s removed from -> %s.", moduleName, track.id, tostring(ref)))
 				end
             end
-			common.setRemove(moduleData[moduleName].blockedTracks, track)
 			common.setRemove(moduleData[moduleName].faderData[fadeType].inProgress, fadeInProgress)
         end
     }
@@ -165,17 +164,23 @@ function this.isRunning(optsOrModule)
 	return false
 end
 
+-- Cancels any fade in/out currently in progress for the given module,
+-- or just in/out for the given track and ref. Does not remove tracks.
+-- Make sure to remove tracks after calling this function if necessary.
 function this.cancel(moduleName, track, ref)
-    if (not moduleData[moduleName]) or (not track) or (not ref) then return end
+	if not moduleData[moduleName] then return end
 	for fadeType in pairs(moduleData[moduleName].faderData) do
 		for k, fade in ipairs(moduleData[moduleName].faderData[fadeType].inProgress) do
-			if (fade.track == track) and (fade.ref == ref) then
-				fade.iterTimer:cancel()
-				fade.fadeTimer:cancel()
-				common.setRemove(moduleData[moduleName].blockedTracks, track)
-				moduleData[moduleName].faderData[fadeType].inProgress[k] = nil
-				debugLog(string.format("[%s] Fade %s canceled for track %s -> %s.", moduleName, fadeType, track.id, tostring(ref)))
+			if track and ref then
+				if not (fade.track == track and fade.ref == ref) then
+					goto continue
+				end
 			end
+			fade.iterTimer:cancel()
+			fade.fadeTimer:cancel()
+			debugLog(string.format("[%s] Fade %s canceled for track %s -> %s.", moduleName, fadeType, fade.track.id, tostring(fade.ref)))
+			moduleData[moduleName].faderData[fadeType].inProgress[k] = nil
+			:: continue ::
 		end
 	end
 end
@@ -189,5 +194,14 @@ function this.fadeOut(options)
     options.fadeType = "out"
     parse(options)
 end
+
+local function onLoaded()
+	debugLog("Resetting fader data.")
+	for moduleName in pairs(moduleData) do
+		moduleData[moduleName].faderData["out"].inProgress = {}
+		moduleData[moduleName].faderData["in"].inProgress = {}
+	end
+end
+event.register("loaded", onLoaded)
 
 return this
