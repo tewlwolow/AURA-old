@@ -139,7 +139,7 @@ function this.isRunning(optsOrModule)
 
 	local function timerRunning(fadeType)
 		for _, fade in ipairs(moduleData[moduleName].faderData[fadeType].inProgress) do
-			if common.isTimerAlive(fade.iterTimer) or common.isTimerAlive(fader.fadeTimer) then
+			if common.isTimerAlive(fade.iterTimer) or common.isTimerAlive(fade.fadeTimer) then
 				return true
 			end
 		end
