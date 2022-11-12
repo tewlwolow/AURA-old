@@ -91,7 +91,11 @@ local function windCheck(e)
         if cell.isInterior then
             weather = tes3.getRegion({ useDoors = true }).weather
         else
-            weather = WtC.currentWeather
+            if WtC.nextWeather then
+                weather = WtC.nextWeather
+            else
+                weather = WtC.currentWeather
+            end
         end
     end
 
