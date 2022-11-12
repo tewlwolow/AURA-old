@@ -166,14 +166,18 @@ local function cellCheck()
 		and (common.checkCellDiff(cell, cellLast) == false
 			or cell == cellLast) then
 		debugLog("Same conditions. Returning.")
-		if cell.isInterior and interiorTimer then interiorTimer:reset() end
+		if cell.isInterior and windoors and not table.empty(windoors) then
+			interiorTimer:reset()
+		end
 		return
 	elseif timeNow ~= timeLast
 		and weatherNow == weatherLast
 		and (common.checkCellDiff(cell, cellLast) == false)
 		and ((weatherNow >= 4 and weatherNow < 6) or (weatherNow == 8)) then
 		debugLog("Time changed but weather didn't. Returning.")
-		if cell.isInterior and interiorTimer then interiorTimer:reset() end
+		if cell.isInterior and windoors and not table.empty(windoors) then
+			interiorTimer:reset()
+		end
 		return
 	end
 
