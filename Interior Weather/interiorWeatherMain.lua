@@ -2,10 +2,17 @@ local config = require("tew.AURA.config")
 local common = require("tew.AURA.common")
 local tewLib = require("tew.tewLib.tewLib")
 local sounds = require("tew.AURA.sounds")
+local soundData = require("tew.AURA.soundData")
 
 local IWvol = config.IWvol / 200
+local openPlazaVolBoost = 0.2
+local transitionScalarThreshold = 0.65
+local volume, pitch, sound
 
-local cellLast, thunRef, windoors, thunder, interiorTimer, thunderTimerBig, thunderTimerSmall, thunderTime, interiorType, weather, weatherLast, scalarTimer
+local scalarTimer, transitionScalarLast
+local windoors, interiorTimer
+local cell, cellLast, interiorType, weather, weatherLast
+local thunRef, thunder, thunderTimer, thunderTime
 local thunArray = common.thunArray
 local blockedWeathers = {
 	[0] = true,
@@ -88,18 +95,6 @@ local debugLog = common.debugLog
 local isOpenPlaza = tewLib.isOpenPlaza
 local moduleName = "interiorWeather"
 
-local immediate = false
-
--- Check script scope variable or function param to determine whether we should play immediately of fade in --
-local function immediateParser(options)
-	immediate = immediate or options.immediate
-	if immediate then
-		sounds.playImmediate { weather = options.weather, module = moduleName, volume = options.volume, type = options.type, reference = options.reference, pitch = options.pitch }
-	else
-		sounds.play { weather = options.weather, module = moduleName, volume = options.volume, type = options.type, reference = options.reference, pitch = options.pitch }
-	end
-end
-
 -- Play thunder sounds on a timer --
 local function playThunder()
 	local thunVol, thunPitch
@@ -110,6 +105,7 @@ local function playThunder()
 	thunder = thunArray[math.random(1, #thunArray)]
 	debugLog("Playing thunder: " .. thunder)
 
+	-- Exposing thunderPlayed event for GitD --
 	local result = event.trigger("AURA:thunderPlayed", { sound = thunder, reference = thunRef, windoors = windoors, delay = 1.0 })
 	local delay = table.get(result, "delay", 1.0)
 
@@ -123,81 +119,65 @@ local function playThunder()
 
 	thunderTime = math.random(3, 20)
 
-	if interiorType == "big" then
-		if thunderTimerBig then
-			thunderTimerBig:pause()
-			thunderTimerBig:cancel()
-			thunderTimerBig = nil
+	thunderTimer:pause()
+	thunderTimer:cancel()
+	thunderTimer = nil
+	if windoors and not table.empty(windoors) then
+		thunRef = windoors[math.random(1, #windoors)]
+	end
+	thunderTimer = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
+end
+
+-- Not too proud of this --
+local function updateContitions(resetTimerFlag)
+	if resetTimerFlag
+	and interiorTimer
+	and cell.isInterior
+	and windoors
+	and not table.empty(windoors) then
+		interiorTimer:reset()
+	end
+	weatherLast = weather
+	cellLast = cell
+end
+
+-- Remove windoor sounds with fade out, interiorWeather exclusive! --
+local function stopWindoors()
+	if windoors and not table.empty(windoors) then
+		for _, windoor in ipairs(windoors) do
+			if windoor ~= nil then
+				sounds.remove { module = moduleName, reference = windoor }
+			end
 		end
-		if windoors and not table.empty(windoors) then
-			thunRef = windoors[math.random(1, #windoors)]
-			thunderTimerBig = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
-		end
-	elseif interiorType == "sma" or interiorType == "ten" then
-		if thunderTimerSmall then
-			thunderTimerSmall:pause()
-			thunderTimerSmall:cancel()
-			thunderTimerSmall = nil
-		end
-		thunderTimerBig = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
 	end
 end
 
--- For shacks, small huts etc. --
-local function playInteriorSmall(cell)
-	local volBoost = 0
-	thunRef = cell
-	if isOpenPlaza(cell) == true then
-		volBoost = 0.2
-		thunRef = nil
-		debugLog("Found open plaza. Applying volume boost and removing thunder timer.")
-	end
-
-	immediateParser {
-		weather = weather,
-		module  = moduleName,
-		volume  = soundConfig[interiorType][weather].volume * IWvol + volBoost,
-		pitch   = soundConfig[interiorType][weather].pitch,
-		type    = interiorType
-	}
-end
-
--- For bigger interiors, proper buildings and that --
-local function playInteriorBig(windoor, updateImmediate)
-	if windoor == nil then debugLog("Dodging an empty ref.") return end
-	immediateParser {
-		weather   = weather,
-		module    = moduleName,
-		volume    = (soundConfig[interiorType][weather].volume * IWvol) - (0.005 * #windoors),
-		pitch     = soundConfig[interiorType][weather].pitch,
-		type      = interiorType,
-		immediate = updateImmediate,
-		reference = windoor,
-	}
-end
-
--- Will be yeeeeeeeeeeeeeeeeet otherwise --
-local function updateInteriorBig()
+-- Using sounds.fadeIn shortcut to avoid having to pass through getTrack() on every windoor update --
+local function playWindoors()
+	if not windoors or table.empty(windoors) then return end
 	debugLog("Updating interior doors and windows.")
+	local windoorVol = volume - (0.005 * #windoors)
 	local playerPos = tes3.player.position:copy()
-	for _, windoor in ipairs(windoors) do
-		if playerPos:distance(windoor.position:copy()) > 900
-			and windoor ~= nil then
-			playInteriorBig(windoor, true)
+	for i, windoor in ipairs(windoors) do
+		if windoor ~= nil and playerPos:distance(windoor.position:copy()) < 1800 then
+			if not tes3.getSoundPlaying{sound = sound, reference = windoor} then
+				sounds.fadeIn{
+					module = moduleName,
+					track = sound,
+					volume = windoorVol,
+					pitch = pitch,
+					reference = windoor,
+				}
+			end
 		end
 	end
 end
 
 local function clearTimers()
-	if thunderTimerBig then
-		thunderTimerBig:pause()
-		thunderTimerBig:cancel()
-		thunderTimerBig = nil
-	end
-	if thunderTimerSmall then
-		thunderTimerSmall:pause()
-		thunderTimerSmall:cancel()
-		thunderTimerSmall = nil
+	if thunderTimer then
+		thunderTimer:pause()
+		thunderTimer:cancel()
+		thunderTimer = nil
 	end
 	if scalarTimer then
 		scalarTimer:pause()
@@ -206,76 +186,52 @@ local function clearTimers()
 	end
 end
 
-local function cellCheck()
+local function cellCheck(e)
 
 	-- Gets messy otherwise --
 	-- We don't want to reset sounds when the player is waiting for a longer time --
 	-- We'll resolve conditions after UI waiting element is destroyed --
-	local mp = tes3.mobilePlayer
-	if (not mp) or (mp and (mp.waiting or mp.traveling)) then
-		return
-	end
-
-	weather = tes3.getRegion({ useDoors = true }).weather.index
-	local cell = tes3.getPlayerCell()
-	immediate = false
+    local mp = tes3.mobilePlayer
+    if (not mp) or (mp and (mp.waiting or mp.traveling or mp.sleeping)) then
+        return
+    end
 
 	debugLog("Starting cell check for module: " .. moduleName)
 
-	-- Get out if the weather is the same as last time --
-	if weather == weatherLast and cellLast == cell then
-		debugLog("Same weather and cell detected. Returning.")
-		return
-	end
-
-	if common.checkCellDiff(cell, cellLast) then
-		debugLog("Cell type changed, resetting module sounds.")
-		sounds.removeImmediate { module = moduleName }
-		if windoors and not table.empty(windoors) then
-			for _, windoor in ipairs(windoors) do
-				sounds.removeImmediate { module = moduleName, reference = windoor }
-			end
-		end
-	end
-
-	IWvol = config.IWvol / 200
-	thunderTime = math.random(5, 10)
-
-	-- Start the interior timer for windoor updates if not started already --
-	if not interiorTimer then
-		interiorTimer = timer.start({ duration = 1, iterations = -1, callback = updateInteriorBig, type = timer.real })
-		interiorTimer:pause()
-	else
-		interiorTimer:pause()
-	end
-
+	-- Cell resolution --
+	cell = e and e.cell or tes3.getPlayerCell()
 	if not cell then debugLog("No cell detected. Returning.") return end
 
 	-- If exterior - bugger off and stop timers --
 	if (cell.isOrBehavesAsExterior)
-		and not (isOpenPlaza(cell)) then
+	and not (isOpenPlaza(cell)) then
 		debugLog("Found exterior cell. Removing sounds and returning.")
 		cellLast = cell
+		sounds.removeImmediate { module = moduleName }
 		clearTimers()
 		return
 	end
 
-	-- Remove sounds from small type of interior if the weather has changed --
-	if weather ~= weatherLast then
-		sounds.removeImmediate { module = moduleName, type = "small" }
-		clearTimers()
-	end
+	local regionObject = tes3.getRegion({ useDoors = true })
+	local transitionScalarNow = regionObject.weather.controller.transitionScalar
+
+	weather = regionObject.weather.index
 
 	-- If the weather is clear or snowy, let's bugger off --
-	if (blockedWeathers[weather]) or ((WtC.nextWeather) and (blockedWeathers[WtC.nextWeather])) then
+	if blockedWeathers[weather] then
 		debugLog("Uneligible weather detected. Returning.")
 		sounds.remove { module = moduleName }
-		if windoors and not table.empty(windoors) then
-			for _, windoor in ipairs(windoors) do
-				sounds.removeImmediate { module = moduleName, reference = windoor }
-			end
-		end
+		stopWindoors()
+		windoors = nil
 		clearTimers()
+		updateContitions()
+		return
+	end
+
+	-- Get out if the weather is the same as last time --
+	if weather == weatherLast and cellLast == cell then
+		debugLog("Same weather and cell detected.")
+		updateContitions(true)
 		return
 	end
 
@@ -284,26 +240,30 @@ local function cellCheck()
 	if (isOpenPlaza(cell) == true)
 		and (weather == 6
 			or weather == 7) then
+		updateContitions()
 		return
 	end
 
 	-- Resolve if we're transitioning, play the interior sound only after the particles appear (roughly) --
 
-	if (WtC.nextWeather and WtC.transitionScalar) then
-		local timerDuration = math.max(0.5 - (WtC.transitionScalar), 0.0)
-		if WtC.transitionScalar <= 0.5 then
-			scalarTimer = timer.start {
-				duration = timerDuration,
-				type = timer.game,
-				iterations = 1,
-				callback = cellCheck
-			}
-			return
-		end
+	if transitionScalarLast
+	and transitionScalarNow
+	and (transitionScalarNow > 0)
+	and (transitionScalarNow <= transitionScalarThreshold)
+	and (transitionScalarLast ~= transitionScalarNow) then
+		debugLog(string.format("Weather transitioning. Scalar: %.2f | Threshold: %.2f", transitionScalarNow, transitionScalarThreshold))
+		scalarTimer = timer.start{
+			iterations = 1,
+			type = timer.simulate,
+			duration = 2,
+			callback = cellCheck
+		}
+		return
 	end
+	transitionScalarLast = nil
 
+	debugLog("Cell: " .. cell.editorName)
 	debugLog("Weather: " .. weather)
-	debugLog("Immediate flag: " .. tostring(immediate))
 
 	-- Determine cell type --
 	if common.getCellType(cell, common.cellTypesSmall) == true then
@@ -314,49 +274,128 @@ local function cellCheck()
 		interiorType = "big"
 	end
 
-	-- Get doors and windows --
-	windoors = {}
-	windoors = common.getWindoors(cell)
+	debugLog("Interior type: " .. interiorType)
 
-	-- Play according to cell type --
-	debugLog("Found interior cell.")
-	if interiorType == "sma" then
-		debugLog("Playing small interior sounds.")
-		if isOpenPlaza(cell) == true then
-			tes3.getSound("Rain").volume = 0
-			tes3.getSound("rain heavy").volume = 0
-		else
-			if weather == 5 then
-				thunRef = cell
-				thunderTimerSmall = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
-			end
-		end
-		playInteriorSmall(cell)
-	elseif interiorType == "ten" then
-		debugLog("Playing tent interior sounds.")
-		playInteriorSmall(cell)
-		if weather == 5 then
-			thunRef = cell
-			thunderTimerSmall = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
-		end
-	else
-		interiorType = "big"
-		if windoors and not table.empty(windoors) then
-			debugLog("Playing big interior sounds.")
-			for _, windoor in ipairs(windoors) do
-				sounds.removeImmediate { module = moduleName, reference = windoor }
-				playInteriorBig(windoor)
-			end
-			interiorTimer:resume()
-			thunRef = windoors[math.random(1, #windoors)]
-			if weather == 5 then
-				thunderTimerBig = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
-			end
+	-- Resolve track early since we're going to reuse it when updating windoors --
+	IWvol = config.IWvol / 200
+	volume = soundConfig[interiorType][weather].volume * IWvol
+	pitch = soundConfig[interiorType][weather].pitch
+	sound = soundData.interiorWeather[interiorType][weather]
+
+	-- Remove sounds from small type of interior if the weather has changed --
+	if weatherLast and (not blockedWeathers[weatherLast]) and (weatherLast ~= weather) then
+		if interiorType ~= "big" then
+			debugLog("Different weather detected. Removing sounds.")
+			sounds.remove { module = moduleName }
+			clearTimers()
 		end
 	end
 
-	weatherLast = weather
-	cellLast = cell
+	-- Conditions should be different at this point. We're free to reset stuff --
+	windoors = nil
+	thunRef = nil
+
+	-- Play according to cell type --
+	if interiorType == "sma" then
+		debugLog("Playing small interior sounds.")
+		if isOpenPlaza(cell) == true then
+			debugLog("Found open plaza. Applying volume boost and removing thunder timer.")
+			tes3.getSound("Rain").volume = 0
+			tes3.getSound("rain heavy").volume = 0
+			clearTimers()
+			volume = volume + openPlazaVolBoost
+			thunRef = nil
+		else
+			thunRef = cell
+		end
+		sounds.play{
+			module = moduleName,
+			weather = weather,
+			volume = volume,
+			type = interiorType,
+			pitch = pitch,
+		}
+	elseif interiorType == "ten" then
+		debugLog("Playing tent interior sounds.")
+		thunRef = cell
+		sounds.play{
+			module = moduleName,
+			weather = weather,
+			volume = volume,
+			type = interiorType,
+			pitch = pitch,
+		}
+	else
+		windoors = common.getWindoors(cell)
+		if windoors and not table.empty(windoors) then
+			debugLog("Found " .. #windoors .. " windoor(s). Playing interior loops.")
+			playWindoors()
+			interiorTimer:reset()
+			thunRef = windoors[math.random(1, #windoors)]
+		end
+	end
+
+	thunderTime = math.random(5, 10)
+	if thunRef and (weather == 5) and not common.isTimerAlive(thunderTimer) then
+		debugLog("Starting thunder timer.")
+		thunderTimer = timer.start({ duration = thunderTime, iterations = 1, callback = playThunder, type = timer.real })
+	end
+
+	updateContitions()
+	debugLog("Cell check complete.")
+end
+
+
+--[[
+Pause interior timer on condition change trigger and check if transitioning.
+There are cases when transitionScalar may be stuck on a value > 0 after a
+condition change. One example is after loading a save in an interior where
+weather transition was in progress at the time the save was made.
+--]]
+local function onConditionChanged(e)
+    if interiorTimer then interiorTimer:pause() end
+	local transitionScalar = tes3.worldController.weatherController.transitionScalar
+	if transitionScalar and transitionScalar > 0 then
+		-- Apparently transitioning. cellCheck() will determine if we really are
+		transitionScalarLast = transitionScalar
+		timer.start{
+			iterations = 1,
+			duration = 0.01,
+			type = timer.simulate,
+			callback = function()
+				cellCheck(e)
+			end
+		}
+		return
+	else
+		-- Not transitioning. Carry on as usual.
+		transitionScalarLast = nil
+		cellCheck(e)
+	end
+end
+
+-- Make sure we catch previous IW refs on cell change --
+local function onCellChanged(e)
+	if e.cell and (e.cell.isInterior or (isOpenPlaza(e.cell) == true)) then
+		debugLog("Cell changed, removing sounds.")
+		sounds.removeImmediate { module = moduleName }
+		clearTimers()
+	end
+	onConditionChanged(e)
+end
+
+-- Init windoors, start and pause interiorTimer on loaded --
+local function onLoaded()
+	windoors = {}
+	if not interiorTimer then
+		interiorTimer = timer.start{
+			duration = 1,
+			iterations = -1,
+			callback = playWindoors,
+			type = timer.simulate
+		}
+	end
+	interiorTimer:pause()
 end
 
 -- After waiting/travelling --
@@ -366,24 +405,23 @@ local function waitCheck(e)
 		timer.start {
 			type = timer.game,
 			duration = 0.01,
-			callback = cellCheck
+			callback = onConditionChanged
 		}
 	end)
 end
 
 -- Suck it Java --
 local function runResetter()
-	cellLast, thunRef, windoors, thunder, interiorTimer, thunderTimerBig, thunderTimerSmall, thunderTime, interiorType, weather, weatherLast, scalarTimer = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
-	immediate = false
+	cell, cellLast, thunRef, windoors, thunder, interiorTimer, scalarTimer, thunderTimer, thunderTime, interiorType, weather, weatherLast, volume, pitch, sound = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+	transitionScalarLast = nil, nil
 end
 
-WtC = tes3.worldController.weatherController
-
-event.register("cellChanged", cellCheck, { priority = -165 })
-event.register("weatherTransitionFinished", cellCheck, { priority = -165 })
-event.register("weatherTransitionStarted", cellCheck, { priority = -165 })
-event.register("weatherChangedImmediate", cellCheck, { priority = -165 })
-event.register("weatherTransitionImmediate", cellCheck, { priority = -165 })
+event.register("cellChanged", onCellChanged, { priority = -165 })
+event.register("weatherTransitionFinished", onConditionChanged, { priority = -165 })
+--event.register("weatherTransitionStarted", onConditionChanged, { priority = -165 }) -- As per MWSE documentation, weather will not start transitioning in interiors, and since we only work with interiors in this module, we can do away with this event
+event.register("weatherChangedImmediate", onConditionChanged, { priority = -165 })
+event.register("weatherTransitionImmediate", onConditionChanged, { priority = -165 })
 event.register("uiActivated", waitCheck, { filter = "MenuTimePass", priority = -15 })
 event.register("load", runResetter)
+event.register("loaded", onLoaded, { priority = -160 })
 debugLog("Interior Weather module initialised.")

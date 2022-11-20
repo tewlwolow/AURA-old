@@ -32,7 +32,8 @@ this.cellTypesSmall = {
 	"rp_v_arena",
 	"in_nord_house_04",
 	"in_nord_house_02",
-	"t_rea_set_i_house_"
+	"t_rea_set_i_house_",
+	--"ab_in_ashlstriderhovel", -- Hmm...
 }
 
 -- Tent interiors --

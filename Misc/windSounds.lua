@@ -1,18 +1,15 @@
 local sounds = require("tew.AURA.sounds")
 local common = require("tew.AURA.common")
 local moduleName = "wind"
-local windPlaying = false
 local config = require("tew.AURA.config")
 local playInteriorWind = config.playInteriorWind
 local windVol = (config.windVol / 200)
 local windType, cell
 local windTypeLast, cellLast
 local interiorTimer
-local windoors = {}
+local windoors
 
 local debugLog = common.debugLog
-
-local WtC
 
 -- These have their own wind sounds --
 local blockedWeathers = {
@@ -35,75 +32,88 @@ local function getWindType(cSpeed)
     end
 end
 
-local function playWind(ref, useLast, vol, pitch)
-    if not vol then vol = windVol end
-    sounds.play { module = moduleName, type = windType, volume = vol, pitch = pitch, reference = ref, last = useLast }
-    windPlaying = true
+local function updateContitions(resetTimerFlag)
+	if resetTimerFlag
+	and interiorTimer
+	and cell.isInterior
+	and windoors
+	and not table.empty(windoors) then
+		interiorTimer:reset()
+	end
     windTypeLast = windType
     cellLast = cell
 end
 
-local function updateInteriorBig()
-    debugLog("Updating interior doors and windows.")
-    local playerPos = tes3.player.position
-    for _, windoor in ipairs(windoors) do
-        if playerPos:distance(windoor.position:copy()) < 1800 -- Less then cutoff, just to be sure. Shouldn't be too jarring --
-            and windoor ~= nil then
-            local windoorVol = (0.4 * windVol) - (0.005 * #windoors)
-            playWind(windoor, true, windoorVol, 0.8)
+local function stopWindoors()
+	if windoors and not table.empty(windoors) then
+        for _, windoor in ipairs(windoors) do
+            sounds.removeImmediate { module = moduleName, reference = windoor }
         end
     end
+end
+
+local function playWindoors(useLast)
+	if not windoors or table.empty(windoors) then return end
+	debugLog("Updating interior doors and windows.")
+	local windoorVol = (0.4 * windVol) - (0.005 * #windoors)
+	local playerPos = tes3.player.position:copy()
+	local playLast
+	for i, windoor in ipairs(windoors) do
+		if windoor ~= nil and playerPos:distance(windoor.position:copy()) < 1800 then
+			if i == 1 then
+				playLast = useLast
+			else
+				playLast = true
+			end
+			sounds.play{
+				module = moduleName,
+				type = windType,
+				volume = windoorVol,
+				pitch = 0.8,
+				reference = windoor,
+				last = playLast,
+			}
+		end
+	end
 end
 
 -- Resolve data and play or remove wind sounds --
 local function windCheck(e)
     -- Gets messy otherwise --
     local mp = tes3.mobilePlayer
-    if (not mp) or (mp and (mp.waiting or mp.traveling)) then
+    if (not mp) or (mp and (mp.waiting or mp.traveling or mp.sleeping)) then
         return
     end
 
-    -- Getting rid of timers on cell check --
-    if not interiorTimer then
-        interiorTimer = timer.start({ duration = 1, iterations = -1, callback = updateInteriorBig, type = timer.real })
-        interiorTimer:pause()
-    else
-        interiorTimer:pause()
-    end
+    debugLog("Cell changed or time check triggered. Running cell check.")
 
+    -- Cell resolution --
     cell = tes3.getPlayerCell()
-
     if (not cell) then
 		debugLog("No cell detected. Returning.")
         sounds.remove { module = moduleName, volume = windVol }
-        windPlaying = false
 		return
 	end
 	debugLog("Cell: " .. cell.editorName)
 
-    -- Determine if we're transitioning --
+    -- Weather resolution --
+    local regionObject = tes3.getRegion({ useDoors = true })
     local weather
     if e and e.to then
+        debugLog("Weather transitioning.")
         weather = e.to
     else
-        -- We need proper weather/cloudsSpeed resolution if cell is interior.
-        -- Otherwise, WtC data won't update unless you step outside.
-        if cell.isInterior then
-            weather = tes3.getRegion({ useDoors = true }).weather
-        else
-            if WtC.nextWeather then
-                weather = WtC.nextWeather
-            else
-                weather = WtC.currentWeather
-            end
-        end
+        weather = regionObject.weather
     end
+
+    debugLog("Weather: " .. weather.index)
 
     -- Bugger off if weather is blocked --
     if blockedWeathers[weather.index] then
-        debugLog("Weather is blocked. Returning.")
+        debugLog("Uneligible weather detected. Removing sounds.")
+        stopWindoors()
         sounds.remove { module = moduleName, volume = windVol }
-        windPlaying = false
+        updateContitions()
         return
     end
 
@@ -116,70 +126,98 @@ local function windCheck(e)
     if not windType then
         debugLog("Wind type is nil. Returning.")
         sounds.remove { module = moduleName, volume = windVol }
-        windPlaying = false
+        updateContitions()
         return
     end
     debugLog("Wind type: " .. windType)
 
-    local useLast = (cellLast and common.checkCellDiff(cell, cellLast) == true and windType == windTypeLast) or false
+    local useLast = (windType == windTypeLast) or false
 
-    if not (windPlaying) or (windTypeLast ~= windType) or (common.checkCellDiff(cell, cellLast)) then
+    -- Transition filter chunk --
+    if (windType == windTypeLast)
+    and (common.checkCellDiff(cell, cellLast) == false)
+    and not (cell ~= cellLast) then
+        debugLog("Same conditions. Returning.")
+        updateContitions(true)
+        return
+    end
+    if common.checkCellDiff(cell, cellLast) then
+		debugLog("Cell type changed. Removing module sounds.")
+		sounds.removeImmediate { module = moduleName }
+	end
+
+    if (windTypeLast ~= windType) or (cell ~= cellLast) then
 
         if (cell.isOrBehavesAsExterior) then
-            if useLast then
-                -- Using the same track when entering int/ext in same area; time/weather change will randomise it again --
-                debugLog("Found same cell. Using last sound.")
-                sounds.removeImmediate { module = moduleName }
-                playWind(nil, useLast, nil, nil)
-            else
-                debugLog("Found different exterior cell. Using new sound.")
-                sounds.remove { module = moduleName, volume = windVol }
-                playWind(nil, useLast, nil, nil)
-            end
+            -- Using the same track when entering int/ext in same area; time/weather change will randomise it again --
+            debugLog(string.format("Found exterior cell. useLast: %s", useLast))
+            if not useLast then sounds.remove { module = moduleName, volume = windVol } end
+            sounds.play { module = moduleName, type = windType, volume = windVol, last = useLast }
         else
-            debugLog("Not in an exterior cell. Returning.")
+            debugLog("Found interior cell.")
+            stopWindoors()
+            windoors = nil
+            if (cell ~= cellLast) then
+                sounds.removeImmediate { module = moduleName } -- Needed to catch previous interior cell sounds --
+            end
             if not playInteriorWind then
-                debugLog("Removing wind sound.")
+                debugLog("Found interior cell and playInteriorWind off. Removing sounds.")
                 sounds.removeImmediate { module = moduleName }
-                windPlaying = false
+                updateContitions()
                 return
+            end
+            if common.getCellType(cell, common.cellTypesSmall) == true
+            or common.getCellType(cell, common.cellTypesTent) == true then
+                debugLog(string.format("Found small interior cell. useLast: %s", useLast))
+                sounds.play{
+                    module = moduleName,
+                    type = windType,
+                    volume = 0.4 * windVol,
+                    pitch = 0.8,
+                    last = useLast
+                }
             else
-                debugLog("Playing interior wind sound.")
-                sounds.removeImmediate { module = moduleName }
-                if common.getCellType(cell, common.cellTypesSmall) == true
-                    or common.getCellType(cell, common.cellTypesTent) == true then
-                    debugLog("Found small interior cell. Playing interior loops.")
-                    playWind(nil, useLast, 0.4 * windVol, 0.8)
-                else
-                    debugLog("Found big interior cell. Playing interior loops.")
-                    windoors = nil
-                    windoors = common.getWindoors(cell)
-                    if windoors ~= nil then
-                        local windoorVol = (0.4 * windVol) - (0.005 * #windoors)
-                        for i, windoor in ipairs(windoors) do
-                            sounds.removeImmediate { module = moduleName, reference = windoor }
-                            if i == 1 then
-                                playWind(windoor, useLast, windoorVol, 0.8)
-                            else
-                                playWind(windoor, true, windoorVol, 0.8)
-                            end
-                        end
-                        interiorTimer:reset()
-                    end
+                debugLog("Found big interior cell.")
+                windoors = common.getWindoors(cell)
+                if windoors and not table.empty(windoors) then
+                    debugLog("Found " .. #windoors .. " windoor(s). Playing interior loops.")
+                    playWindoors(useLast)
+                    updateContitions(true)
+                    return
                 end
             end
         end
     end
+    updateContitions()
+    debugLog("Cell check complete.")
 end
 
--- Reset on load --
-local function onLoad()
-    windPlaying = false
+-- Pause interior timer on condition change trigger --
+local function onConditionChanged(e)
+    if interiorTimer then interiorTimer:pause() end
+    windCheck(e)
 end
 
 -- Check every half an hour --
 local function runHourTimer()
     timer.start({ duration = 0.5, callback = windCheck, iterations = -1, type = timer.game })
+end
+
+-- Run hour timer, init windoors, start and pause interiorTimer on loaded --
+local function onLoaded()
+    runHourTimer()
+	if playInteriorWind then
+		windoors = {}
+		if not interiorTimer then
+			interiorTimer = timer.start{
+				duration = 1,
+				iterations = -1,
+				callback = playWindoors,
+				type = timer.simulate
+			}
+		end
+		interiorTimer:pause()
+	end
 end
 
 -- Waiting/travelling check --
@@ -189,27 +227,32 @@ local function waitCheck(e)
         timer.start {
             type = timer.game,
             duration = 0.01,
-            callback = windCheck
+            callback = onConditionChanged
         }
     end)
 end
 
 -- Timer here so that sky textures can work ok... something fishy with weatherTransitionStarted event for sure --
-local function transitionStartedWrapper()
+local function transitionStartedWrapper(e)
     timer.start {
-        duration = 0.1,
-        type = timer.game,
-        callback = windCheck
+        duration = 1.5, -- Can be increased if not enough for sky texture pop-in
+        type = timer.simulate, -- Switched to simulate b/c 0.1 duration is a bit too much if using timer.game along with a low timescale tes3globalVariable. E.g.: With a timescale of 10, a 0.1 timer.game timer will actually kick in AFTER weatherTransitionFinished, which is too late
+        iterations = 1,
+        callback = function()
+            onConditionChanged(e)
+        end
     }
 end
 
-WtC = tes3.worldController.weatherController
+local function runResetter()
+    cell, cellLast, windType, windTypeLast, windoors = nil, nil, nil, nil, nil
+end
 
-event.register("weatherChangedImmediate", windCheck, { priority = -100 })
-event.register("weatherTransitionImmediate", windCheck, { priority = -100 })
+event.register("weatherChangedImmediate", onConditionChanged, { priority = -100 })
+event.register("weatherTransitionImmediate", onConditionChanged, { priority = -100 })
 event.register("weatherTransitionStarted", transitionStartedWrapper, { priority = -100 })
-event.register("weatherTransitionFinished", windCheck, { priority = -100 })
-event.register("load", onLoad)
-event.register("loaded", runHourTimer, { priority = -160 })
+event.register("weatherTransitionFinished", onConditionChanged, { priority = -100 })
+event.register("loaded", onLoaded, { priority = -160 })
+event.register("load", runResetter)
 event.register("uiActivated", waitCheck, { filter = "MenuTimePass", priority = 10 })
-event.register("cellChanged", windCheck, { priority = -100 })
+event.register("cellChanged", onConditionChanged, { priority = -100 })

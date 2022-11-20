@@ -57,7 +57,7 @@ local function cellCheck()
 
     -- Gets messy otherwise --
     local mp = tes3.mobilePlayer
-    if (not mp) or (mp and (mp.waiting or mp.traveling)) then
+    if (not mp) or (mp and (mp.waiting or mp.traveling or mp.sleeping)) then
         return
     end
 
