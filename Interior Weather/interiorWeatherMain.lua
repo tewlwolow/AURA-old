@@ -413,7 +413,7 @@ end
 -- Suck it Java --
 local function runResetter()
 	cell, cellLast, thunRef, windoors, thunder, interiorTimer, scalarTimer, thunderTimer, thunderTime, interiorType, weather, weatherLast, volume, pitch, sound = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
-	transitionScalarLast = nil, nil
+	transitionScalarLast = nil
 end
 
 event.register("cellChanged", onCellChanged, { priority = -165 })
