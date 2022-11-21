@@ -369,6 +369,7 @@ end
 
 local function refreshCache()
 	local cell = tes3.getPlayerCell()
+	if common.cellIsInterior(cell) then return end
 	debugLog("Commencing dump!")
 	for ref in cell:iterateReferences() do
 		addToCache(ref)

@@ -104,6 +104,15 @@ function this.getTrackPlaying(track, ref)
 	end
 end
 
+-- Fader shortcuts for modules that need both sounds and direct access to the fader (IW) --
+function this.fadeIn(options)
+	fader.fadeIn(options)
+end
+
+function this.fadeOut(options)
+	fader.fadeOut(options)
+end
+
 -- Sometimes we need to just remove the sounds without fading --
 -- If fade is in progress for the given track and ref, we'll cancel the fade first --
 function this.removeImmediate(options)
@@ -129,7 +138,6 @@ end
 
 -- Remove the sound for a given module, but with fade out --
 function this.remove(options)
-	debugLog("Removing sounds for module: " .. options.module)
 
 	local oldTrack = this.getTrackPlaying(moduleData[options.module].old, options.reference)
 	local newTrack = this.getTrackPlaying(moduleData[options.module].new, options.reference)
@@ -146,8 +154,6 @@ function this.remove(options)
 		newTrackOpts.track = newTrack
 		fader.fadeOut(newTrackOpts)
 	end
-
-	moduleData[options.module].old = moduleData[options.module].new
 end
 
 -- Sometiems we need to play a sound immediately as well.
@@ -161,7 +167,7 @@ function this.playImmediate(options)
 
 	if track then
 		if not tes3.getSoundPlaying{sound = track, reference = ref} then
-			debugLog(string.format("[%s] Playing with volume %s: %s -> %s", options.module, volume, track.id, tostring(ref)))
+			debugLog(string.format("[%s] Playing with volume %.3f: %s -> %s", options.module, volume, track.id, tostring(ref)))
 			tes3.playSound{
 				sound = track,
 				reference = ref,

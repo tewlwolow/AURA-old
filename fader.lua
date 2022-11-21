@@ -4,7 +4,6 @@ local common = require("tew.AURA.common")
 local debugLog = common.debugLog
 local moduleData = require("tew.AURA.moduleData")
 
-local TIME = 0.5
 local TICK = 0.1
 local MAX = 1
 local MIN = 0
@@ -15,7 +14,8 @@ local function parse(options)
     local track = options.track
     local fadeType = options.fadeType
 	local oppositeType = (fadeType == "out") and "in" or "out"
-    local volume = options.volume or MAX
+	local lastVolume = moduleData[options.module].lastVolume
+    local volume = math.floor((options.volume or MAX) * 1000) / 1000 -- Round down to max 3 decimal places
     local pitch = options.pitch or MAX
     local targetDuration = options.duration or moduleData[moduleName].faderData[fadeType].duration
     local currentVolume
@@ -62,10 +62,20 @@ local function parse(options)
 
     if fadeType == "in" then
         currentVolume = MIN
+		if tes3.getSoundPlaying{sound = track, reference = ref} then
+			debugLog(string.format("[%s] Track %s already playing on ref %s. Returning.", moduleName, track.id, tostring(ref)))
+			return
+		end
 		debugLog(string.format("[%s] Playing with volume %s: %s -> %s", moduleName, currentVolume, track.id, tostring(ref)))
 		tes3.playSound{sound = track, volume = currentVolume, pitch = pitch, reference = ref, loop = true}
     else
-		currentVolume = volume
+		if options.volume then
+			currentVolume = options.volume
+		elseif lastVolume and lastVolume > 0 then
+			currentVolume = lastVolume
+		else
+			currentVolume = volume
+		end
     end
 
     if (not tes3.getSoundPlaying{sound = track, reference = ref}) then
@@ -118,6 +128,8 @@ local function parse(options)
 				end
             end
 			common.setRemove(moduleData[moduleName].faderData[fadeType].inProgress, fadeInProgress)
+			moduleData[options.module].old = track
+			moduleData[options.module].lastVolume = currentVolume
         end
     }
 	common.setInsert(moduleData[moduleName].faderData[fadeType].inProgress, fadeInProgress)
