@@ -354,13 +354,14 @@ weather transition was in progress at the time the save was made.
 --]]
 local function onConditionChanged(e)
     if interiorTimer then interiorTimer:pause() end
+	transitionScalarLast = nil
 	local transitionScalar = tes3.worldController.weatherController.transitionScalar
 	if transitionScalar and transitionScalar > 0 then
 		-- Apparently transitioning. cellCheck() will determine if we really are
 		transitionScalarLast = transitionScalar
 		timer.start{
 			iterations = 1,
-			duration = 0.01,
+			duration = 0.5,
 			type = timer.simulate,
 			callback = function()
 				cellCheck(e)
@@ -369,7 +370,6 @@ local function onConditionChanged(e)
 		return
 	else
 		-- Not transitioning. Carry on as usual.
-		transitionScalarLast = nil
 		cellCheck(e)
 	end
 end
