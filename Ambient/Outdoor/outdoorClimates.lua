@@ -72,6 +72,7 @@ this.regions = {
     ["Solitude Forest Region"] = "sno",
     ["Southern Gold Coast Region"] = "gra",
     ["Stirk Isle Region"] = "lus",
+    ["Sunad Mora Region"] = "mou",
     ["Sundered Hills Region"] = "mou",
     ["Sundered Scar Region"] = "swa",
     ["Telvanni Isles Region"] = "roc",
