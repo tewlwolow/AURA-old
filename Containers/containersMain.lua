@@ -50,7 +50,6 @@ local function getContainerSound(id, action)
         if common.findMatch(containersData[containerName].idArray, id) then
             local sound = (action == "open") and containersData[containerName].openSoundObj or containersData[containerName].closeSoundObj
             debugLog("Got cont name: " .. containerName)
-            debugLog("Got sound: " .. sound.id)
             return sound, containersData[containerName].volume
         end
     end
@@ -64,8 +63,9 @@ local function playOpenSound(e)
         local sound, volume = getContainerSound(e.target.object.id:lower(), "open")
         volume = (volume or 0.8) * Cvol
         if sound then
-            tes3.playSound { sound = sound, reference = e.target, volume = volume }
+            debugLog("Got sound: " .. sound.id)
             debugLog("Playing container opening sound. Vol: " .. volume)
+            tes3.playSound { sound = sound, reference = e.target, volume = volume }
         end
     end
 end
@@ -80,8 +80,9 @@ local function playCloseSound(e)
 
     if sound then
         tes3.removeSound { reference = e.reference }
-        tes3.playSound { sound = sound, reference = e.reference, volume = volume }
+        debugLog("Got sound: " .. sound.id)
         debugLog("Playing container closing sound. Vol: " .. volume)
+        tes3.playSound { sound = sound, reference = e.reference, volume = volume }
         flag = 1
     end
 
