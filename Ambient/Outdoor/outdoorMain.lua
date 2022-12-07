@@ -32,7 +32,7 @@ local blockedWeathers = {
     [9] = true,
 }
 
-local function updateContitions(resetTimerFlag)
+local function updateConditions(resetTimerFlag)
 	if resetTimerFlag
 	and interiorTimer
 	and cell.isInterior
@@ -122,7 +122,7 @@ local function cellCheck(e)
 		debugLog("Uneligible weather detected. Removing sounds.")
 		stopWindoors()
 		sounds.remove { module = moduleName, volume = OAvol }
-		updateContitions()
+		updateConditions()
 		return
 	end
 
@@ -168,13 +168,13 @@ local function cellCheck(e)
 		and weatherNow == weatherLast
 		and cell == cellLast then
 		debugLog("Found same cell, same conditions. Returning.")
-		updateContitions(true)
+		updateConditions(true)
 		return
 	elseif timeNow ~= timeLast
 		and weatherNow == weatherLast
 		and (common.checkCellDiff(cell, cellLast) == false) then
 		debugLog("Time changed but weather didn't. Returning.")
-		updateContitions(true)
+		updateConditions(true)
 		return
 	end
 
@@ -201,7 +201,7 @@ local function cellCheck(e)
 		if (not playInteriorAmbient) or (playInteriorAmbient and isOpenPlaza(cell) and weatherNow == 3) then
 			debugLog("Found interior cell and playInteriorAmbient off. Removing sounds.")
 			sounds.removeImmediate { module = moduleName }
-			updateContitions()
+			updateConditions()
 			return
 		end
 		if common.getCellType(cell, common.cellTypesSmall) == true
@@ -218,18 +218,18 @@ local function cellCheck(e)
 			}
 		else
 			debugLog("Found big interior cell.")
-			if not moduleInteriorWeather then updateContitions() return end
+			if not moduleInteriorWeather then updateConditions() return end
 			windoors = common.getWindoors(cell)
 			if windoors and not table.empty(windoors) then
 				debugLog("Found " .. #windoors .. " windoor(s). Playing interior loops.")
 				playWindoors(useLast)
-				updateContitions(true)
+				updateConditions(true)
 				return
 			end
 		end
 	end
 
-	updateContitions()
+	updateConditions()
 	debugLog("Cell check complete.")
 end
 
