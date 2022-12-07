@@ -5,7 +5,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
-        idArray = {
+        idPatterns = {
             "_furn_cola",
         },
     },
@@ -15,7 +15,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.0,
-        idArray = {
+        idPatterns = {
             "_furn_bl",
         },
     },
@@ -25,7 +25,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.0,
-        idArray = {
+        idPatterns = {
             "_var_bl",
             "barrel",
         },
@@ -36,7 +36,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "_furn_ba",
             "_setnmd_bs",
             "_var_bs",
@@ -49,7 +49,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.0,
-        idArray = {
+        idPatterns = {
             "_dngruin_bc",
             "bookcase",
         },
@@ -60,7 +60,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "_furn_box",
             "_furn_cardhort",
             "ab_o_ashltrinketbox",
@@ -73,7 +73,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 2.0,
-        idArray = {
+        idPatterns = {
             "chest",
             "de_m_01_v_potion_", -- wooden chest
             "dem_01_v_potion_", -- wooden chest
@@ -97,7 +97,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "ab_o_comrchdrawr0",
             "ab_o_deplndrawers",
             "ab_o_derchdrawers",
@@ -115,7 +115,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
-        idArray = {
+        idPatterns = {
             "_dngcolb_j",
         },
     },
@@ -125,7 +125,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "closet",
             "_furnm_cl",
             "_furnp_cl",
@@ -138,7 +138,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 2.0,
-        idArray = {
+        idPatterns = {
             "_coff",
             "_dngcolb_ch2", -- wooden coffer
             "coffer",
@@ -150,7 +150,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "crate",
             "general_t_cra",
             "_var_cr",
@@ -162,7 +162,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
-        idArray = {
+        idPatterns = {
             "_setind_cul",
         },
     },
@@ -172,7 +172,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "cupboard",
             "_furn_cb",
             "_furnm_cb",
@@ -186,7 +186,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.0,
-        idArray = {
+        idPatterns = {
             "ab_o_daedricchest",
             "daed_chest",
         },
@@ -197,7 +197,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "desk",
             "_dngdir_ds",
             "_furnm_ds",
@@ -211,7 +211,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "drawers",
             "_dngdir_dw",
             "_furnm_dw",
@@ -225,7 +225,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwchestlarge",
             "dwrv_chest_divayth00",
             "dwrv_chest_divayth02",
@@ -241,7 +241,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwdeskpos",
             "dwrv_desk",
             "dwrv_endusal_desk",
@@ -253,7 +253,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "_furnm_ht",
             "_furnr_ht",
             "hutch",
@@ -265,7 +265,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "_furnr_lc",
         },
     },
@@ -275,7 +275,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwchestrare",
             "ab_o_dwchestweap",
             "dwrv_chest10",
@@ -294,7 +294,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.7,
-        idArray = {
+        idPatterns = {
             "_furn_pot",
             "crabpot",
             "pot_01",
@@ -306,7 +306,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
-        idArray = {
+        idPatterns = {
             "t_cyrayl_dngruin_ch1",
             "t_cyrayl_dngruin_ch2",
             "t_cyrayl_dngruin_ch3",
@@ -318,7 +318,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwcab",
             "dwrv_cabinet",
         },
@@ -329,7 +329,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.0,
-        idArray = {
+        idPatterns = {
             "sack",
             "_setnmd_sk",
             "_var_csk",
@@ -347,7 +347,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "_chest_sgem",
             "_furn_chs",
             "chest_andrano",
@@ -364,7 +364,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "dwrv_chest_small",
         },
     },
@@ -374,7 +374,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwclosetall",
             "dwrv_closet",
         },
@@ -385,7 +385,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwdrawerspos",
             "dwrv_drawers",
         },
@@ -396,7 +396,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "ab_o_dwtablepos",
             "dwrv_table",
         },
@@ -407,7 +407,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "ab_o_dwbarreling",
             "dwrv_barrel00",
         },
@@ -418,7 +418,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.7,
-        idArray = {
+        idPatterns = {
             "ab_o_dwbarrelshorting",
             "dwrv_barrel10",
         },
@@ -429,7 +429,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
-        idArray = {
+        idPatterns = {
             "_furnr_cls1", -- nighttable
             "_furnp_dw2", -- endtable
             "_furnp_st1", -- sidetable
@@ -442,7 +442,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
-        idArray = {
+        idPatterns = {
             -- need to dodge *furn* ids that aren't urns
             "_dngcryp_u1",
             "_dngbarr_u",
@@ -470,7 +470,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
-        idArray = {
+        idPatterns = {
             "_furn_vs",
         },
     },
@@ -480,7 +480,7 @@ return {
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.9,
-        idArray = {
+        idPatterns = {
             "_skyrea_furn_ch",
         },
     },

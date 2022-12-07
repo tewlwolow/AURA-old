@@ -146,13 +146,12 @@ function this.setRemove(tab, elem)
 	end
 end
 
-function this.findMatch(stringArray, str)
+function this.getMatch(stringArray, str)
 	for _, pattern in pairs(stringArray) do
 		if string.find(str, pattern) then
-			return true
+			return pattern
 		end
 	end
-	return false
 end
 
 function this.isTimerAlive(t)
@@ -230,7 +229,7 @@ function this.isRefSheltered(options)
             if hit and hit.reference and hit.reference.object then
 				if (hit.reference.object.objectType == tes3.objectType.static)
 				or (hit.reference.object.objectType == tes3.objectType.activator) then
-					if ignoreList and this.findMatch(ignoreList, hit.reference.object.id:lower()) then
+					if ignoreList and this.getMatch(ignoreList, hit.reference.object.id:lower()) then
 						this.debugLog("[rayTest] Ignoring result -> " .. hit.reference.object.id:lower())
 						goto continue
 					end
