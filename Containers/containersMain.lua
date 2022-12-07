@@ -32,7 +32,7 @@ end
 local function getContainerData(id, action)
     debugLog("Fetching sound for container: " .. id)
     local results = {}
-    for containerName, data in pairs(containersData) do
+    for _, data in pairs(containersData) do
         local match = common.getMatch(data.idPatterns, id)
         if match then
             table.insert(results, {
