@@ -1,87 +1,84 @@
 local config = require("tew.AURA.config")
 local common = require("tew.AURA.common")
-local tewLib = require("tew.tewLib.tewLib")
-local findWholeWords = tewLib.findWholeWords
 
 local flag = 0
 local containersData = require("tew.AURA.Containers.containersData")
 
 local debugLog = common.debugLog
 
-local containers = {
-    ["open"] = {},
-    ["close"] = {}
-}
-
 local function buildContainerSounds()
     mwse.log("\n")
     debugLog("|---------------------- Creating container sound objects. ----------------------|\n")
 
-    for cont, filepath in pairs(containersData["open"]) do
-        local sound = tes3.createObject {
-            id = "tew_" .. cont .. "_o",
+    for containerName, data in pairs(containersData) do
+        local soundOpen = tes3.createObject{
+            id = "tew_" .. containerName .. "_o",
             objectType = tes3.objectType.sound,
-            filename = filepath,
+            filename = data.open,
         }
-        containers["open"][cont] = sound
-        debugLog("Adding container open file: " .. sound.id)
-    end
+        data.openSoundObj = soundOpen
+        debugLog("Adding container open file: " .. soundOpen.id)
 
-    for cont, filepath in pairs(containersData["close"]) do
-        local sound = tes3.createObject {
-            id = "tew_" .. cont .. "_c",
+        local soundClose = tes3.createObject{
+            id = "tew_" .. containerName .. "_c",
             objectType = tes3.objectType.sound,
-            filename = filepath,
+            filename = data.close,
         }
-        containers["close"][cont] = sound
-        debugLog("Adding container close file: " .. sound.id)
+        data.closeSoundObj = soundClose
+        debugLog("Adding container close file: " .. soundClose.id)
     end
 end
 
-local function getContainerSound(id, type)
+local function getContainerData(id, action)
     debugLog("Fetching sound for container: " .. id)
-    for cont, sound in pairs(containers[type]) do
-        if string.find(id, cont) then
-            return cont, sound
+    local results = {}
+    for containerName, data in pairs(containersData) do
+        local match = common.getMatch(data.idPatterns, id)
+        if match then
+            table.insert(results, {
+                matchedPattern = match,
+                sound = (action == "open") and data.openSoundObj or data.closeSoundObj,
+                volume = data.volume,
+            })
         end
     end
-end
-
-local function getVolume(containerType)
-    if not containerType then return 1.0 end
-    local vol
-    for k, v in pairs(containersData["volume"]) do
-        if containerType:lower() == k then
-            vol = v
-        end
-    end
-    return vol or 0.8
+    -- Best result is that which matches more characters inside passed id string --
+    table.sort(results, function(a, b) return #a.matchedPattern > #b.matchedPattern end)
+    return results[1]
 end
 
 local function playOpenSound(e)
     if not (e.target.object.objectType == tes3.objectType.container) or (e.target.object.objectType == tes3.objectType.npc) then return end
-    local Cvol = config.Cvol / 200
 
     if not tes3.getLocked({ reference = e.target }) then
-        local containerType, sound = getContainerSound(e.target.object.id:lower(), "open")
+        local Cvol = config.Cvol / 200
+        local data = getContainerData(e.target.object.id:lower(), "open")
+        local sound = data.sound
+        local volume = (data.volume or 0.8) * Cvol
         if sound then
-            tes3.playSound { sound = sound, reference = e.target, volume = getVolume(containerType) * Cvol }
-            debugLog("Playing container opening sound.")
+            debugLog("Got cont name: " .. tostring(e.target.object.name))
+            debugLog("Got sound: " .. sound.id)
+            debugLog("Playing container opening sound. Vol: " .. volume)
+            tes3.playSound { sound = sound, reference = e.target, volume = volume }
         end
     end
 end
 
 local function playCloseSound(e)
     if not (e.reference.object.objectType == tes3.objectType.container) or (e.reference.object.objectType == tes3.objectType.npc) then return end
-    local Cvol = config.Cvol / 200
     if flag == 1 then return end
 
-    local containerType, sound = getContainerSound(e.reference.object.id:lower(), "close")
+    local Cvol = config.Cvol / 200
+    local data = getContainerData(e.reference.object.id:lower(), "close")
+    local sound = data.sound
+    local volume = (data.volume or 0.8) * Cvol
 
     if sound then
         tes3.removeSound { reference = e.reference }
-        tes3.playSound { sound = sound, reference = e.reference, volume = getVolume(containerType) * Cvol }
-        debugLog("Playing container closing sound.")
+        debugLog("Got cont name: " .. tostring(e.reference.object.name))
+        debugLog("Got sound: " .. sound.id)
+        debugLog("Playing container closing sound. Vol: " .. volume)
+        tes3.playSound { sound = sound, reference = e.reference, volume = volume }
         flag = 1
     end
 

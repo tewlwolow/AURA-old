@@ -135,11 +135,11 @@ local function isRelevantRef(ref)
 	and (not (ref.deleted or ref.disabled))
 	and (ref.tempData)
 	then
-		if common.findMatch(blockedStatics, ref.object.id:lower()) then
+		if common.getMatch(blockedStatics, ref.object.id:lower()) then
 			debugLog("Skipping blocked static: " .. tostring(ref))
 			return false
 		end
-		if common.findMatch(rainyStatics, ref.object.id:lower()) then
+		if common.getMatch(rainyStatics, ref.object.id:lower()) then
 			return true
 		end
 	end
@@ -204,7 +204,7 @@ local function addToCache(ref)
 		end
 		-- Adding (bool) sheltered temp data to every static in the cache
 		-- so that we later know whether to add a sound to it or not.
-		if not common.findMatch(exemptedFromShelteredTest, ref.object.id:lower()) then
+		if not common.getMatch(exemptedFromShelteredTest, ref.object.id:lower()) then
 			ref.tempData.tew.sheltered = common.isRefSheltered{originRef = ref, ignoreList = rayTestIgnoreStatics}
 		end
 		table.insert(staticsCache, ref)
@@ -263,7 +263,7 @@ local function processRef(ref)
 	-- If we are, then either fadeIn or crossFade.
 
 	if (not currentShelter.ref)
-	and (common.findMatch(shelterStatics, objId))
+	and (common.getMatch(shelterStatics, objId))
 	and (playerPos:distance(refPos) < 280)
 	and (common.isRefSheltered{targetRef = ref, ignoreList = rayTestIgnoreStatics}) then
 		debugLog("Player sheltered.")
