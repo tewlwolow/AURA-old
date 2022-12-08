@@ -44,7 +44,7 @@ local function getContainerData(id, action)
     end
     -- Best result is that which matches more characters inside passed id string --
     table.sort(results, function(a, b) return #a.matchedPattern > #b.matchedPattern end)
-    return results[1]
+    return results[1] or results
 end
 
 local function playOpenSound(e)
