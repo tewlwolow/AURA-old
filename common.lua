@@ -120,27 +120,16 @@ function this.getWindoors(cell)
 	end
 end
 
--- Pass me a table and an element and I'll tell you the index it's stored at --
-function this.getIndex(tab, elem)
-	local index = nil
-	for i, v in ipairs(tab) do
-		if (v == elem) then
-			index = i
-		end
-	end
-	return index
-end
-
 -- Emulates a set of unique elements. This function adds a new element to the set. --
 function this.setInsert(tab, elem)
-	if not this.getIndex(tab, elem) then
+	if not table.find(tab, elem) then
 		table.insert(tab, elem)
 	end
 end
 
 -- Emulates a set of unique elements. This function removes an existing element from the set. --
 function this.setRemove(tab, elem)
-	local index = this.getIndex(tab, elem)
+	local index = table.find(tab, elem)
 	if index then
 		table.remove(tab, index)
 	end
