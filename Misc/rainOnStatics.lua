@@ -162,7 +162,8 @@ local function removeSound(ref)
 end
 
 local function isRainLoopSoundPlaying()
-    if WtC.currentWeather.rainLoopSound
+    if WtC.currentWeather
+	and WtC.currentWeather.rainLoopSound
 	and WtC.currentWeather.rainLoopSound:isPlaying() then
         return true
     else
