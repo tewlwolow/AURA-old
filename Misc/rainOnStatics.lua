@@ -162,7 +162,8 @@ local function removeSound(ref)
 end
 
 local function isRainLoopSoundPlaying()
-    if WtC.currentWeather.rainLoopSound
+    if WtC.currentWeather
+	and WtC.currentWeather.rainLoopSound
 	and WtC.currentWeather.rainLoopSound:isPlaying() then
         return true
     else
@@ -198,7 +199,7 @@ local function addToCache(ref)
 		return
 	end
 	-- We only add a static to the cache if it's not already in there.
-	if not common.getIndex(staticsCache, ref) then
+	if not table.find(staticsCache, ref) then
 		if not ref.tempData.tew then
 			ref.tempData.tew = {}
 		end
@@ -222,7 +223,7 @@ local function removeFromCache(ref)
 	if (#staticsCache == 0) then return end
 
 	-- We need the ref's index for table.remove()
-	local index = common.getIndex(staticsCache, ref)
+	local index = table.find(staticsCache, ref)
 	if not index then return end
 
 	removeSound(ref)

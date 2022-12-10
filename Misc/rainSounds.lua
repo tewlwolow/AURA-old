@@ -65,7 +65,7 @@ local function changeRainSounds()
     debugLog("Storm type: " .. stormyType)
 
     -- Remove vanilla sound if present, the next step will add the new sound --
-    if WtC.currentWeather.rainLoopSound then
+    if WtC.currentWeather and WtC.currentWeather.rainLoopSound then
         WtC.currentWeather.rainLoopSound:stop()
     end
 
