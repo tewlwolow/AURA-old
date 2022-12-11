@@ -149,7 +149,7 @@ return {
         close = "tew\\A\\N\\crate_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.9,
+        volume = 1.0,
         idPatterns = {
             "crate",
             "general_t_cra",
@@ -240,7 +240,7 @@ return {
         close = "tew\\A\\N\\dwemercloset_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.9,
+        volume = 1.0,
         idPatterns = {
             "ab_o_dwdeskpos",
             "dwrv_desk",
@@ -417,7 +417,7 @@ return {
         close = "tew\\A\\N\\dwemerkeg_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.7,
+        volume = 0.8,
         idPatterns = {
             "ab_o_dwbarrelshorting",
             "dwrv_barrel10",
