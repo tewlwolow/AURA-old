@@ -124,7 +124,7 @@ return {
         close = "tew\\A\\N\\closet_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.9,
+        volume = 1.0,
         idPatterns = {
             "closet",
             "_furnm_cl",
