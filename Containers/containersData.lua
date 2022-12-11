@@ -402,8 +402,8 @@ return {
         },
     },
     ["steel keg"] = {
-        open = "tew\\A\\N\\dwemerchest_o.wav",
-        close = "tew\\A\\N\\dwemerchest_c.wav",
+        open = "tew\\A\\N\\dwemerkeg_o.wav",
+        close = "tew\\A\\N\\dwemerkeg_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.8,
@@ -413,8 +413,8 @@ return {
         },
     },
     ["steel quarter keg"] = {
-        open = "tew\\A\\N\\dwemerchest_o.wav",
-        close = "tew\\A\\N\\dwemerchest_c.wav",
+        open = "tew\\A\\N\\dwemerkeg_o.wav",
+        close = "tew\\A\\N\\dwemerkeg_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 0.7,
