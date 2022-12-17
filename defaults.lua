@@ -5,7 +5,7 @@ return {
     splashVol = 200,
     UIvol = 150,
     SVvol = 200,
-    Cvol = 120,
+    Cvol = 150,
     vsVol = 130,
     intVol = 120,
     popVol = 100,

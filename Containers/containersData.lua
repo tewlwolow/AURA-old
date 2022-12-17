@@ -1,10 +1,10 @@
 return {
     ["amphora"] = {
-        open = "Fx\\trans\\drstn_opn.wav",
-        close = "Fx\\trans\\drstn_cls.wav",
+        open = "tew\\A\\N\\drstn_o.wav",
+        close = "tew\\A\\N\\drstn_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 1.5,
+        volume = 1.6,
         idPatterns = {
             "_furn_cola",
         },
@@ -68,11 +68,11 @@ return {
         },
     },
     ["chest"] = {
-        open = "Fx\\chest_opn.wav",
-        close = "Fx\\chest_cls.wav",
+        open = "tew\\A\\N\\chest_o.wav",
+        close = "tew\\A\\N\\chest_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 2.0,
+        volume = 1.0,
         idPatterns = {
             "chest",
             "de_m_01_v_potion_", -- wooden chest
@@ -110,8 +110,8 @@ return {
         },
     },
     ["clay jar"] = {
-        open = "Fx\\trans\\drstn_opn.wav",
-        close = "Fx\\trans\\drstn_cls.wav",
+        open = "tew\\A\\N\\drstn_o.wav",
+        close = "tew\\A\\N\\drstn_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
         volume = 1.5,
@@ -133,11 +133,11 @@ return {
         },
     },
     ["coffer"] = {
-        open = "Fx\\chest_opn.wav",
-        close = "Fx\\chest_cls.wav",
+        open = "tew\\A\\N\\chest_o.wav",
+        close = "tew\\A\\N\\chest_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 2.0,
+        volume = 1.0,
         idPatterns = {
             "_coff",
             "_dngcolb_ch2", -- wooden coffer
@@ -157,11 +157,11 @@ return {
         },
     },
     ["culdem"] = {
-        open = "Fx\\trans\\drstn_opn.wav",
-        close = "Fx\\trans\\drstn_cls.wav",
+        open = "tew\\A\\N\\drstn_o.wav",
+        close = "tew\\A\\N\\drstn_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 1.5,
+        volume = 2.0,
         idPatterns = {
             "_setind_cul",
         },
@@ -224,7 +224,7 @@ return {
         close = "tew\\A\\N\\dwemerchest_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.9,
+        volume = 1.0,
         idPatterns = {
             "ab_o_dwchestlarge",
             "dwrv_chest_divayth00",
@@ -301,11 +301,11 @@ return {
         },
     },
     ["reliquary"] = {
-        open = "Fx\\trans\\drstn_opn.wav",
-        close = "Fx\\trans\\drstn_cls.wav",
+        open = "tew\\A\\N\\drstn_o.wav",
+        close = "tew\\A\\N\\drstn_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 1.5,
+        volume = 2.0,
         idPatterns = {
             "t_cyrayl_dngruin_ch1",
             "t_cyrayl_dngruin_ch2",
@@ -346,7 +346,7 @@ return {
         close = "tew\\A\\N\\smallchest_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.9,
+        volume = 0.7,
         idPatterns = {
             "_chest_sgem",
             "_furn_chs",
@@ -363,7 +363,7 @@ return {
         close = "tew\\A\\N\\dwemerchest_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.9,
+        volume = 1.0,
         idPatterns = {
             "dwrv_chest_small",
         },
@@ -406,7 +406,7 @@ return {
         close = "tew\\A\\N\\dwemerkeg_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.8,
+        volume = 1.0,
         idPatterns = {
             "ab_o_dwbarreling",
             "dwrv_barrel00",
@@ -417,7 +417,7 @@ return {
         close = "tew\\A\\N\\dwemerkeg_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 0.8,
+        volume = 0.9,
         idPatterns = {
             "ab_o_dwbarrelshorting",
             "dwrv_barrel10",
@@ -437,11 +437,11 @@ return {
         },
     },
     ["urn"] = {
-        open = "Fx\\trans\\drstn_opn.wav",
-        close = "Fx\\trans\\drstn_cls.wav",
+        open = "tew\\A\\N\\drstn_o.wav",
+        close = "tew\\A\\N\\drstn_c.wav",
         openSoundObj = nil,
         closeSoundObj = nil,
-        volume = 1.5,
+        volume = 1.8,
         idPatterns = {
             -- need to dodge *furn* ids that aren't urns
             "_dngcryp_u1",
