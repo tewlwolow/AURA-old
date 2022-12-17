@@ -29,6 +29,10 @@ this.messages = {
 	modLanguage = "Mod language.",
 
 	enableDebug = "Enable debug mode?",
+	outputKey = "Shift + this key will output the currently playing AURA tracks to a messagebox.",
+	oldTrack = "Old track",
+	newTrack = "New track",
+	none = "None",
 	enableOutdoor = "Enable Outdoor Ambient module?",
 	enableInterior = "Enable Interior Ambient module?",
 	enablePopulated = "Enable Populated Ambient module?",

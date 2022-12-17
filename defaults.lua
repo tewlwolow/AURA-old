@@ -24,7 +24,7 @@ return {
     playInteriorWeather = true,
     playYurtFlap = true,
     debugLogOn = false,
-    outputKey = tes3.scanCode.v,
+    outputKey = {keyCode = tes3.scanCode.v},
     tauntChance = 30,
     serviceTravel = true,
     serviceRepair = true,

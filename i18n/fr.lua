@@ -42,6 +42,10 @@ this.messages = {
 	modLanguage = "Langue du mod.",
 
 	enableDebug = "Activer le mode débug ?",
+	outputKey = "Shift + cette touche permet d'afficher les pistes AURA en cours de lecture dans une boîte de messages.",
+	oldTrack = "Piste précédente",
+	newTrack = "Nouvelle piste",
+	none = "Aucun(e)",
 	enableOutdoor = "Activer le module Ambiance Extérieure ?",
 	enableInterior = "Activer le module Ambiance Intérieure ?",
 	enablePopulated = "Activer le module Ambiance Population ?",
