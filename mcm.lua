@@ -35,6 +35,11 @@ page:createYesNoButton {
 	variable = registerVariable("debugLogOn"),
 	restartRequired = true
 }
+page:createKeyBinder{
+	label = "Shift + this key will output the currently playing AURA tracks to a messagebox.\nDefault = V.",
+	allowCombinations = false,
+	variable = registerVariable("outputKey"),
+}
 page:createYesNoButton {
 	label = messages.enableOutdoor,
 	variable = registerVariable("moduleAmbientOutdoor"),
