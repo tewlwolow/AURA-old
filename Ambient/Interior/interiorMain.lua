@@ -140,6 +140,7 @@ local function cellCheck()
         onMusicSelection()
     end
 
+    intVol = config.intVol / 200
     local cell = tes3.getPlayerCell()
 
     -- Bugger off if we're not inside --
