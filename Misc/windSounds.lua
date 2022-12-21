@@ -86,6 +86,7 @@ local function windCheck(e)
     end
 
     debugLog("Cell changed or time check triggered. Running cell check.")
+    windVol = config.windVol / 200
 
     -- Cell resolution --
     cell = tes3.getPlayerCell()

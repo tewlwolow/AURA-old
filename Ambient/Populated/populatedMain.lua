@@ -61,6 +61,7 @@ local function cellCheck()
         return
     end
 
+    popVol = config.popVol / 200
     local cell = tes3.getPlayerCell()
 
     -- Wilderness shouldn't be considered populated --
